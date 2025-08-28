@@ -310,7 +310,6 @@ body.no-scroll { overflow: hidden; }
   color: #cbd5e1;
   cursor: pointer;
   text-align: left;
-  transition: all 0.3s ease;
   font-size: 0.95rem;
   font-weight: 500;
   pointer-events: auto;
@@ -606,7 +605,6 @@ body.light-theme .quiz-answer:hover { background: rgba(99,102,241,0.1); }
   border-radius: 8px;
   margin-bottom: 8px;
   background: rgba(51, 65, 85, 0.5);
-  transition: all 0.3s ease;
   cursor: pointer;
   border: 1px solid transparent;
   position: relative;
@@ -843,7 +841,6 @@ body.light-theme .quiz-answer:hover { background: rgba(99,102,241,0.1); }
   background: rgba(30, 41, 59, 0.8);
   color: #f1f5f9;
   backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
 }
 
 #messageInput:focus {
@@ -867,7 +864,6 @@ body.light-theme .quiz-answer:hover { background: rgba(99,102,241,0.1); }
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1769,6 +1765,10 @@ body.light-theme .mobile-header {
   border-bottom-color: rgba(99, 102, 241, 0.2);
 }
 
+body.light-theme .hamburger {
+  color: #1e293b;
+}
+
 body.light-theme .brand-title {
   -webkit-text-fill-color: initial;
 }
@@ -1826,6 +1826,17 @@ body.light-theme .account-section h4 {
 
 body.light-theme .account-section #userEmail {
   color: #475569;
+}
+
+body.light-theme #loginBtn.scan-btn.outline,
+body.light-theme #logoutBtn.scan-btn.outline.hidden {
+  color: #1e293b;
+}
+
+body.light-theme .modal-content {
+  color: #1e293b;
+  background: rgba(248, 250, 252, 0.8);
+  border-color: rgba(99, 102, 241, 0.2);
 }
 
 body.light-theme .stat-item {
@@ -2005,9 +2016,10 @@ body.light-theme .dropdown-option:hover {
   outline: none;
 }
 .modal-content .scan-btn {
-  width: 100%;
+  width: 20%;
   margin-top: 12px;
-   margin-top: 16px;
+  margin-top: 16px;
+  justify-content: center;
 }
 .modal-content a {
   color: #aad8ff;
