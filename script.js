@@ -20,7 +20,6 @@ let isScanning = false;
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
-    checkApiStatus();
     setupEventListeners();
     loadStats();
     setupAccessibility();
@@ -470,47 +469,6 @@ function initQuiz() {
 }
 // ---------- end of initQuiz replacement ----------
 
-// Check API status
-async function checkApiStatus() {
-    try {
-        statusIndicator.className = "status-indicator checking";
-        statusText.textContent = "Checking...";
-        
-        // Check main classification API
-        const response = await fetch(`${apiUrl}/health`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        // Check explainer API
-        let explainerStatus = "Unknown";
-        try {
-            const expResponse = await fetch(`${explainerUrl}/health`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            explainerStatus = expResponse.ok ? "Available" : "Unavailable";
-        } catch (error) {
-            explainerStatus = "Unavailable";
-        }
-        
-        if (response.ok) {
-            statusIndicator.className = "status-indicator online";
-            statusText.textContent = `Online (Explainer: ${explainerStatus})`;
-        } else {
-            throw new Error('API not responding');
-        }
-    } catch (error) {
-        console.error('API Status Check Error:', error);
-        statusIndicator.className = "status-indicator offline";
-        statusText.textContent = "Offline";
-    }
-}
-
 // Append message to chat
 function appendMessage(content, sender = "user", isTyping = false) {
     const bubble = document.createElement("div");
@@ -790,9 +748,6 @@ function updateExplainerUrl(url) {
     explainerUrl = url;
     checkApiStatus();
 }
-
-// Auto-check API status every 30 seconds
-setInterval(checkApiStatus, 30000); 
 
 // Theme toggle functionality
 function toggleTheme() {
