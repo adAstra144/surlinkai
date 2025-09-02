@@ -1442,7 +1442,8 @@ body.light-theme .camera-actions .flip-btn:hover {
     font-size: 0.9rem;
     min-width: 100px;
     border-radius: 20px;
-    height: 48px;
+    flex-shrink: 0;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2745,6 +2746,7 @@ ul, li, p, h1, h2, h3, h4, h5, h6 {
 #googleSignInBtn {
     width: 240px;
     margin-bottom: 16px;
+    margin-left: 15px;
     border-radius: 16px;
     justify-self: center;
 }
