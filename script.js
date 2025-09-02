@@ -14,12 +14,13 @@ const statusText = document.getElementById("statusText");
 let totalScans = 0;
 let phishingScans = 0;
 let safeScans = 0;
-let apiUrl = "https://adAstra144-Anti-Phishing-Scanner-0.hf.space";
+let apiUrl = "https://adAStra144-Anti-Phishing-Scanner-0.hf.space";
 let explainerUrl = "";
 let isScanning = false;
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
+    checkApiStatus();
     setupEventListeners();
     loadStats();
     setupAccessibility();
@@ -28,7 +29,6 @@ document.addEventListener('DOMContentLoaded', function() {
     setupMobileMenu();
     updateUserUI(); // Add this line to update UI on DOM ready
     setupImagePicker();
-    updateCameraOptionVisibility(); // Initialize camera option visibility
     // Initial padding adjustment
     adjustChatBottomPadding();
 
@@ -173,14 +173,8 @@ function adjustChatBottomPadding() {
 }
 
 // Recalculate on resize and orientation changes
-window.addEventListener('resize', () => {
-    adjustChatBottomPadding();
-    updateCameraOptionVisibility();
-});
-window.addEventListener('orientationchange', () => {
-    adjustChatBottomPadding();
-    updateCameraOptionVisibility();
-});
+window.addEventListener('resize', adjustChatBottomPadding);
+window.addEventListener('orientationchange', adjustChatBottomPadding);
 
 // Mobile drawer menu setup
 function setupMobileMenu() {
@@ -469,6 +463,47 @@ function initQuiz() {
 }
 // ---------- end of initQuiz replacement ----------
 
+// Check API status
+async function checkApiStatus() {
+    try {
+        statusIndicator.className = "status-indicator checking";
+        statusText.textContent = "Checking...";
+        
+        // Check main classification API
+        const response = await fetch(`${apiUrl}/health`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        // Check explainer API
+        let explainerStatus = "Unknown";
+        try {
+            const expResponse = await fetch(`${explainerUrl}/health`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            explainerStatus = expResponse.ok ? "Available" : "Unavailable";
+        } catch (error) {
+            explainerStatus = "Unavailable";
+        }
+        
+        if (response.ok) {
+            statusIndicator.className = "status-indicator online";
+            statusText.textContent = `Online (Explainer: ${explainerStatus})`;
+        } else {
+            throw new Error('API not responding');
+        }
+    } catch (error) {
+        console.error('API Status Check Error:', error);
+        statusIndicator.className = "status-indicator offline";
+        statusText.textContent = "Offline";
+    }
+}
+
 // Append message to chat
 function appendMessage(content, sender = "user", isTyping = false) {
     const bubble = document.createElement("div");
@@ -500,7 +535,7 @@ function appendMessage(content, sender = "user", isTyping = false) {
     chatWindow.scrollTop = chatWindow.scrollHeight;
     adjustChatBottomPadding();
     
-    // Remove welcome message after first user message
+      // Remove welcome message after first user message
     const welcomeMessage = chatWindow.querySelector('.welcome-message');
     if (welcomeMessage && sender === "user") {
         welcomeMessage.style.display = 'none';
@@ -560,7 +595,7 @@ async function scanMessage() {
     
     // Show loading states
     showTypingIndicator();
-    animateProgressBar();
+    
     
     try {
         const response = await fetch(`${apiUrl}/analyze`, {
@@ -749,6 +784,9 @@ function updateExplainerUrl(url) {
     checkApiStatus();
 }
 
+// Auto-check API status every 30 seconds
+setInterval(checkApiStatus, 30000); 
+
 // Theme toggle functionality
 function toggleTheme() {
     const body = document.body;
@@ -845,6 +883,108 @@ function setupImagePicker() {
     }
   });
 }
+let authMode = "login"; // "login" or "register"
+
+function openLoginModal() {
+  document.getElementById("authModal").classList.remove("hidden");
+  document.getElementById("sidebar").classList.remove("open"); // If mobile menu is open, close it
+}
+
+function closeLoginModal() {
+  document.getElementById("authModal").classList.add("hidden");
+}
+
+function switchAuthMode(e) {
+  e.preventDefault();
+  authMode = (authMode === "login") ? "register" : "login";
+  document.getElementById("authTitle").innerText = authMode === "login" ? "Login" : "Register";
+  document.querySelector("#authModal button.scan-btn").innerText = authMode === "login" ? "Login" : "Register";
+  document.getElementById("authSwitch").innerHTML = authMode === "login" 
+    ? `Don't have an account? <a href="#" onclick="switchAuthMode(event)">Register here</a>` 
+    : `Already have an account? <a href="#" onclick="switchAuthMode(event)">Login here</a>`;
+}
+
+function handleAuthAction() {
+  const email = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPassword").value.trim();
+  if (!email || !password) {
+    alert("Please fill in all fields");
+    return;
+  }
+  if (authMode === "register") {
+    localStorage.setItem("surlinkUser", JSON.stringify({ email, password }));
+    alert("✅ Registration successful! You can now log in.");
+    switchAuthMode(new Event("click"));
+  } else {
+    const storedUser = JSON.parse(localStorage.getItem("surlinkUser"));
+    if (storedUser && storedUser.email === email && storedUser.password === password) {
+      localStorage.setItem("surlinkLoggedIn", "true");
+      localStorage.setItem("surlinkLoggedUser", email);
+      localStorage.removeItem("surlinkGoogleName");
+      localStorage.removeItem("surlinkGooglePic");
+      updateUserUI();
+      closeLoginModal();
+    } else {
+      alert("❌ Invalid email or password");
+    }
+  }
+}
+
+
+// Unified Google & Local login/profile logic
+window.setGoogleUser = function(data) {
+  localStorage.setItem("surlinkLoggedIn", "true");
+  localStorage.setItem("surlinkLoggedUser", data.email);
+  localStorage.setItem("surlinkGoogleName", data.name);
+  localStorage.setItem("surlinkGooglePic", data.picture);
+  updateUserUI();
+  closeLoginModal();
+};
+
+function updateUserUI() {
+  const loggedIn = localStorage.getItem("surlinkLoggedIn") === "true";
+  const email = localStorage.getItem("surlinkLoggedUser") || "";
+  const name = localStorage.getItem("surlinkGoogleName") || "";
+  const pic = localStorage.getItem("surlinkGooglePic") || "";
+
+  const loginBtn = document.getElementById("loginBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const userEmail = document.getElementById("userEmail");
+  const userName = document.getElementById("userName");
+  const userPic = document.getElementById("userPic");
+
+  if (loggedIn) {
+    logoutBtn.classList.remove("hidden");
+    loginBtn.classList.add("hidden");
+    userEmail.innerText = email || "";
+    userName.innerText = name || "";
+    if (pic) {
+      userPic.src = pic;
+      userPic.style.display = "block";
+    } else {
+      userPic.style.display = "none";
+    }
+  } else {
+    logoutBtn.classList.add("hidden");
+    loginBtn.classList.remove("hidden");
+    userEmail.innerText = "Not logged in";
+    if (userName) userName.innerText = "";
+    if (userPic) userPic.style.display = "none";
+  }
+}
+
+function logout() {
+  localStorage.removeItem("surlinkLoggedIn");
+  localStorage.removeItem("surlinkLoggedUser");
+  localStorage.removeItem("surlinkGoogleName");
+  localStorage.removeItem("surlinkGooglePic");
+  updateUserUI();
+}
+
+// Call on page load
+window.addEventListener("load", () => {
+  updateUserUI();
+});
 
 // === Image Options Dropdown Functions ===
 function isSmallScreen() {
@@ -915,129 +1055,19 @@ document.addEventListener('click', function(event) {
     dropdown.classList.add('hidden');
   }
 });
-let authMode = "login"; // "login" or "register"
-
-function openLoginModal() {
-  document.getElementById("authModal").classList.remove("hidden");
-  document.getElementById("sidebar").classList.remove("open"); // If mobile menu is open, close it
-}
-
-function closeLoginModal() {
-  document.getElementById("authModal").classList.add("hidden");
-}
-
-function switchAuthMode(e) {
-  e.preventDefault();
-  authMode = (authMode === "login") ? "register" : "login";
-  document.getElementById("authTitle").innerText = authMode === "login" ? "Login" : "Register";
-  document.querySelector("#authModal button.scan-btn").innerText = authMode === "login" ? "Login" : "Register";
-  document.getElementById("authSwitch").innerHTML = authMode === "login" 
-    ? `Don't have an account? <a href="#" onclick="switchAuthMode(event)">Register here</a>` 
-    : `Already have an account? <a href="#" onclick="switchAuthMode(event)">Login here</a>`;
-}
-
-function handleAuthAction() {
-  const email = document.getElementById("authEmail").value.trim();
-  const password = document.getElementById("authPassword").value.trim();
-  if (!email || !password) {
-    alert("Please fill in all fields");
-    return;
-  }
-
-  if (authMode === "register") {
-    localStorage.setItem("surlinkUser", JSON.stringify({ email, password }));
-    alert("✅ Registration successful! You can now log in.");
-    switchAuthMode(new Event("click"));
-  } else {
-    const storedUser = JSON.parse(localStorage.getItem("surlinkUser"));
-    if (storedUser && storedUser.email === email && storedUser.password === password) {
-      localStorage.setItem("surlinkLoggedIn", "true");
-      localStorage.setItem("surlinkLoggedUser", email);
-      updateUserUI();
-      closeLoginModal();
-    } else {
-      alert("❌ Invalid email or password");
-    }
-  }
-}
-
-function logout() {
-  localStorage.removeItem("surlinkLoggedIn");
-  localStorage.removeItem("surlinkLoggedUser");
-  updateUserUI();
-}
-
-function updateUserUI() {
-  const loggedIn = localStorage.getItem("surlinkLoggedIn") === "true";
-  const email = localStorage.getItem("surlinkLoggedUser");
-}
-// === Variables ===
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-const userEmail = document.getElementById("userEmail");
-const authModal = document.getElementById("authModal");
-const authEmail = document.getElementById("authEmail");
-const authPassword = document.getElementById("authPassword");
-
-// Login state
-let loggedIn = false;
-let email = "";
-
-// === Update UI based on login state ===
-function updateAuthUI() {
-  if (loggedIn) {
-    logoutBtn.classList.remove("hidden");
-    loginBtn.classList.add("hidden");
-    userEmail.innerText = email;
-    authModal.classList.add("hidden"); // hide modal if open
-  } else {
-    logoutBtn.classList.add("hidden");
-    loginBtn.classList.remove("hidden");
-    userEmail.innerText = "Not logged in";
-  }
-}
-
-// === Open login modal ===
-loginBtn.addEventListener("click", () => {
-  authModal.classList.remove("hidden");
-});
-
-// === Close modal function ===
-function closeLoginModal() {
-  authModal.classList.add("hidden");
-}
-
-// === Login / Register handler (simple simulation) ===
-function handleAuthAction() {
-  // Normally you would validate user here
-  if (authEmail.value && authPassword.value) {
-    loggedIn = true;
-    email = authEmail.value;
-    updateAuthUI();
-    // Clear inputs
-    authEmail.value = "";
-    authPassword.value = "";
-  } else {
-    alert("Please enter email and password");
-  }
-}
-
-// === Logout handler ===
-logoutBtn.addEventListener("click", () => {
-  loggedIn = false;
-  email = "";
-  updateAuthUI();
-});
-
-// Initial UI setup
-updateAuthUI();
-
-
-
-
-
-// Call on page load
+/* splash screen */
 window.addEventListener("load", () => {
-  updateUserUI();
-});
+  const splash = document.getElementById("splashScreen");
 
+  // Keep splash visible for a bit, then fade out
+  setTimeout(() => {
+    splash.classList.add("hide");
+
+    // Wait until splash animation finishes
+    setTimeout(() => {
+      if (typeof window.startOnboarding === "function") {
+        window.startOnboarding(); // ✅ start onboarding
+      }
+    }, 300); // match your splash fade-out transition
+  }, 1900); // how long splash stays visible
+});

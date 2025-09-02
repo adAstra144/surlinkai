@@ -7,18 +7,32 @@
   <meta name="description" content="Advanced AI-powered phishing detection tool. Scan messages, emails, and text content for phishing attempts.">
   <link rel="icon" type="image/svg+xml" href="assets/logo.avif">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href=" https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="normalize.css">
   <link rel="stylesheet" href="style.css">
   <meta name="theme-color" content="#000000">
   <link rel="manifest" href="/manifest.json">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/service-worker.js");
     }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+<!-- Splash Screen -->
+<div id="splashScreen" class="splash-screen">
+  <div class="splash-content">
+    <img src="assets/logo.avif" alt="SûrLink Logo" class="splash-logo">
+    <h2 class="splash-title">SûrLink</h2>
+    <p id="splashTagline" class="splash-tagline">Ai-Powered Anti-Phishing Scanner</p>
+    <div class="splash-loader">
+  <span id="loaderText">0%</span>
+</div>
+  </div>
+</div>
 <body>
   <div class="mobile-header" role="banner">
     <button id="menuToggle" class="hamburger" aria-label="Toggle menu" aria-expanded="false" aria-controls="sidebar">☰</button>
@@ -58,6 +72,10 @@
             <span class="nav-icon">🧠</span>
             <span class="nav-text">Quiz</span>
           </button>
+          <button class="nav-btn" data-section="status" onclick="showSection('status')">
+            <span class="nav-icon">🤖</span>
+            <span class="nav-text">API Status</span>
+          </button> 
           <button class="nav-btn" data-section="feedback" onclick="showSection('feedback')">
             <span class="nav-icon">💬</span>
             <span class="nav-text">Feedback</span>
@@ -69,10 +87,17 @@
 <div class="account-section">
   <h4>Account</h4>
   <div id="userInfo" class="user-info">
-    <p id="userEmail">Not logged in</p>
-    <button id="loginBtn" class="scan-btn outline" onclick="openLoginModal()">Login / Register</button>
+    <div class="user-row" style="display: flex; align-items: center; gap: 10px;">
+      <img id="userPic" src="" alt="Profile" style="display:none; width:32px; height:32px; border-radius:50%;">
+      <p id="userName" style="font-weight:500; margin:0;"></p>
+    </div>
+    <p id="userEmail" style="margin-top:8px;">Not logged in</p>
   </div>
-  <button id="logoutBtn" class="scan-btn outline hidden" onclick="logout()">Logout</button>
+  <hr style="margin: 12px 0; border: none; border-top: 1px solid #475569; opacity: 0.3;">
+  <div class="user-actions">
+    <button id="loginBtn" class="scan-btn outline" onclick="openLoginModal()">Login / Register</button>
+    <button id="logoutBtn" class="scan-btn outline hidden" onclick="logout()">Logout</button>
+  </div>
 </div>
    
         <!-- Theme Toggle Section -->
@@ -110,7 +135,7 @@
         </div>
 
         <!-- Progress Bar -->
-        <div id="progressBar" class="progress-bar hidden" role="progressbar" aria-label="Scanning progress">
+                <div id="progressBar" class="progress-bar hidden" role="progressbar" aria-label="Scanning progress">
           <div class="progress-fill"></div>
         </div>
 
@@ -119,7 +144,7 @@
           <div class="image-input-wrapper">
             <input id="imagePicker" type="file" accept="image/*" aria-label="Select image to extract text" style="display: none;" />
             <button id="imageOptionsBtn" class="icon-btn" aria-label="Choose image or camera" onclick="toggleImageOptions()">
-              <i class="fa-solid fa-image" style="font-size: 24px;"></i>
+              <i class="fa-regular fa-images" style="font-size: 24px;"></i>
             </button>
             <div id="imageOptionsDropdown" class="image-options-dropdown hidden">
               <button class="dropdown-option" onclick="openCamera()">
@@ -171,7 +196,22 @@
             <div class="stat-item">
               <span class="stat-number" id="safeScans">0</span>
               <span class="stat-label">Safe Messages</span>
+              
             </div>
+          </div>
+          <div class="chart-container">
+  <canvas id="scanChart"></canvas>
+</div>
+        </div>
+      </div>
+
+      <!-- Status (Main) -->
+      <div id="statusMainSection" class="content-section">
+        <div class="content-scroll">
+          <h3 style="margin-bottom:12px;">API Status</h3>
+          <div class="api-status" id="apiStatus">
+            <span class="status-indicator" id="statusIndicator" role="status" aria-live="polite">●</span>
+            <span class="status-text" id="statusText">Checking...</span>
           </div>
         </div>
       </div>
@@ -238,13 +278,59 @@
     <input type="email" id="authEmail" placeholder="Email" required>
     <input type="password" id="authPassword" placeholder="Password" required>
 
+        <!-- Google login -->
+    <div id="g_id_onload"
+      data-client_id="1039434473386-fm6bjua9mmpb6umhf6lur1klb806urce.apps.googleusercontent.com"
+      data-auto_prompt="false">
+    </div>
+
+    <div class="g_id_signin" data-type="standard"></div>
+
+        <script>
+      function handleCredentialResponse(response) {
+        const data = parseJwt(response.credential);
+        window.setGoogleUser(data); // <-- Call global function in script.js
+      }
+
+      function parseJwt(token) {
+        let base64Url = token.split('.')[1];
+        let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        let jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+      }
+
+      window.onload = function () {
+        google.accounts.id.initialize({
+          client_id: "1039434473386-fm6bjua9mmpb6umhf6lur1klb806urce.apps.googleusercontent.com",
+          callback: handleCredentialResponse
+        });
+        google.accounts.id.renderButton(
+          document.querySelector(".g_id_signin"),
+          { theme: "outline", size: "large" }
+        );
+      }
+    </script>
+    
     <button class="scan-btn" onclick="handleAuthAction()">Login</button>
     <p id="authSwitch">
       Don't have an account? <a href="#" onclick="switchAuthMode(event)">Register here</a>
     </p>
   </div>
 </div>
+
+  <script>
+  window.addEventListener("load", () => {
+    const splash = document.getElementById("splashScreen");
+    setTimeout(() => {
+      splash.classList.add("hide");
+    }, 5000); // Keep splash for 3 seconds
+  });
+</script>
   
-  <script src="script.js"></script>
+  <script src="script.js" defer></script>
+  <script src="onboarding.js" defer></script>
+ 
 </body>
-</html> 
+</html>
