@@ -37,7 +37,7 @@
   <div class="mobile-header" role="banner">
     <button id="menuToggle" class="hamburger" aria-label="Toggle menu" aria-expanded="false" aria-controls="sidebar">☰</button>
     <div class="mobile-brand">
-      <span class="brand-logo"><img src="assets/logo.avif" alt="SûrLink logo" ></span>
+      <span id="header-icon" class="brand-logo"><img src="assets/logo.avif" alt="SûrLink logo" ></span>
       <span class="brand-title">SûrLink</span>
     </div>
   </div>
@@ -144,7 +144,7 @@
           <div class="image-input-wrapper">
             <input id="imagePicker" type="file" accept="image/*" aria-label="Select image to extract text" style="display: none;" />
             <button id="imageOptionsBtn" class="icon-btn" aria-label="Choose image or camera" onclick="toggleImageOptions()">
-              <i class="fa-regular fa-images" style="font-size: 24px;"></i>
+              <i class="fa-regular fa-images" style="font-size: 18px;"></i>
             </button>
             <div id="imageOptionsDropdown" class="image-options-dropdown hidden">
               <button class="dropdown-option" onclick="openCamera()">

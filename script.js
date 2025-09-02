@@ -679,10 +679,10 @@ function formatResult(data) {
         <div style="margin-top: 8px; font-size: 0.9rem; opacity: 0.8;">
             Confidence: <strong>${confidence}</strong>
         </div>
-        <div style="margin-top: 12px; font-size: 0.85rem; color: #cbd5e1;">
+        <div style="margin-top: 12px; font-size: 0.95rem; color: #cbd5e1;">
             ${isPhishing ? 
-                "⚠️ This message appears to be a phishing attempt. Be cautious and do not click on suspicious links." :
-                "✅ This message appears to be safe. However, always remain vigilant with personal information."
+                "⚠️ This message may be a phishing attempt. Stay alert and verify the source before clicking any links." :
+                "✅ This message appears safe, but always double-check the sender and source."
             }
         </div>
         ${explanation ? `
