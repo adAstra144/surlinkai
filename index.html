@@ -277,19 +277,22 @@
 
     <input type="email" id="authEmail" placeholder="Email" required>
     <input type="password" id="authPassword" placeholder="Password" required>
+    
+    <button class="scan-btn" onclick="handleAuthAction()">Login</button>
 
-        <!-- Google login -->
-    <div id="g_id_onload"
-      data-client_id="1039434473386-fm6bjua9mmpb6umhf6lur1klb806urce.apps.googleusercontent.com"
-      data-auto_prompt="false">
+    <div class="auth-divider-modern">
+      <span class="auth-divider-line"></span>
+      <span class="auth-divider-text">OR</span>
+      <span class="auth-divider-line"></span>
     </div>
 
-    <div class="g_id_signin" data-type="standard"></div>
+    <!-- Google login -->
+    <div id="googleSignInBtn"></div>
 
-        <script>
+    <script>
       function handleCredentialResponse(response) {
         const data = parseJwt(response.credential);
-        window.setGoogleUser(data); // <-- Call global function in script.js
+        window.setGoogleUser(data); // Your existing function
       }
 
       function parseJwt(token) {
@@ -306,15 +309,16 @@
           client_id: "1039434473386-fm6bjua9mmpb6umhf6lur1klb806urce.apps.googleusercontent.com",
           callback: handleCredentialResponse
         });
+
+        // Render the Google Sign-In button inside your modal
         google.accounts.id.renderButton(
-          document.querySelector(".g_id_signin"),
-          { theme: "outline", size: "large" }
+          document.getElementById("googleSignInBtn"),
+          { theme: "filled_black", size: "large" } // customization options
         );
       }
     </script>
-    
-    <button class="scan-btn" onclick="handleAuthAction()">Login</button>
-    <p id="authSwitch">
+
+    <p id="authSwitch" >
       Don't have an account? <a href="#" onclick="switchAuthMode(event)">Register here</a>
     </p>
   </div>
@@ -325,7 +329,7 @@
     const splash = document.getElementById("splashScreen");
     setTimeout(() => {
       splash.classList.add("hide");
-    }, 5000); // Keep splash for 3 seconds
+    }, 3500); // Keep splash for 3 seconds
   });
 </script>
   

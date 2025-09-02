@@ -1442,8 +1442,7 @@ body.light-theme .camera-actions .flip-btn:hover {
     font-size: 0.9rem;
     min-width: 100px;
     border-radius: 20px;
-    flex-shrink: 0;
-    height: 40px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1955,9 +1954,11 @@ body.light-theme .empty-history {
   outline: none;
 }
 .modal-content .scan-btn {
-  width: 100%;
-  margin-top: 12px;
-   margin-top: 16px;
+  width: 75%;
+  margin-top: 16px;
+  justify-content: center;
+  justify-self: center;
+  border-radius: 20px;
 }
 .modal-content a {
   color: #aad8ff;
@@ -2741,3 +2742,32 @@ ul, li, p, h1, h2, h3, h4, h5, h6 {
   transition: none !important;
 }
 
+#googleSignInBtn {
+    width: 240px;
+    margin-bottom: 16px;
+    border-radius: 16px;
+    justify-self: center;
+}
+
+.auth-divider-modern {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 20px 0 20px 0;
+}
+.auth-divider-line {
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+  margin: 0 12px;
+  border-radius: 2px;
+}
+.auth-divider-text {
+  color: #888;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  background: transparent;
+  padding: 0 8px;
+}

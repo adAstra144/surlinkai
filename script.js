@@ -979,6 +979,36 @@ function logout() {
   localStorage.removeItem("surlinkGoogleName");
   localStorage.removeItem("surlinkGooglePic");
   updateUserUI();
+  showMiniPopup("Logged out");
+}
+
+// Mini popup function
+function showMiniPopup(message) {
+  let popup = document.getElementById('miniPopup');
+  if (!popup) {
+    popup = document.createElement('div');
+    popup.id = 'miniPopup';
+    popup.style.position = 'fixed';
+    popup.style.bottom = '32px';
+    popup.style.left = '50%';
+    popup.style.transform = 'translateX(-50%)';
+    popup.style.background = 'linear-gradient(135deg,#6366f1,#8b5cf6)';
+    popup.style.color = '#fff';
+    popup.style.padding = '12px 28px';
+    popup.style.borderRadius = '14px';
+    popup.style.fontWeight = '600';
+    popup.style.fontSize = '1rem';
+    popup.style.boxShadow = '0 8px 24px rgba(99,102,241,0.25)';
+    popup.style.zIndex = '99999';
+    popup.style.opacity = '0';
+    popup.style.transition = 'opacity 0.3s';
+    document.body.appendChild(popup);
+  }
+  popup.textContent = message;
+  popup.style.opacity = '1';
+  setTimeout(() => {
+    popup.style.opacity = '0';
+  }, 2000);
 }
 
 // Call on page load
