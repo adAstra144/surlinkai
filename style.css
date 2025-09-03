@@ -1430,7 +1430,7 @@ body.light-theme .camera-actions .flip-btn:hover {
     gap: 8px;
     background: transparent;
     border-top: none;
-    backdrop-filter: none;
+    backdrop-filter: blur(20px);
     z-index: 1000;
     align-items: center;
     justify-content: center;
@@ -1916,6 +1916,7 @@ body.light-theme .empty-history {
 
 body.light-theme #ai-message {
   color: #000000 !important;
+}
  
  /* Space between Account and Appearance sections */
 .account-section + .theme-toggle-section {
