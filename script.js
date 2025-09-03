@@ -679,7 +679,7 @@ function formatResult(data) {
         <div style="margin-top: 8px; font-size: 0.9rem; opacity: 0.8;">
             Confidence: <strong>${confidence}</strong>
         </div>
-        <div style="margin-top: 12px; font-size: 0.95rem; color: #000000;">
+        <div id="ai-message"  style="margin-top: 12px; font-size: 0.95rem; color: #fff;">
             ${isPhishing ? 
                 "⚠️ This message may be a phishing attempt. Stay alert and verify the source before clicking any links." :
                 "✅ This message appears safe, but always double-check the sender and source."
