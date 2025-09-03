@@ -671,7 +671,27 @@ function formatResult(data) {
     
     const icon = isPhishing ? "🚨" : "✅";
     const color = isPhishing ? "#ef4444" : "#10b981";
-    
+
+    // Expanded safe/phishing advice
+    const advice = isPhishing ? `
+        ⚠️ This message looks suspicious and may be a phishing attempt.<br><br>
+        👉 <b>What to do:</b> Do not reply, share personal details, or click any links/attachments.<br>
+        🛡️ Best action: ignore, delete, or report it.<br><br>
+        🔒 <b>How to avoid phishing:</b><br>
+        • Check the sender’s email/number carefully.<br>
+        • Watch for spelling mistakes or odd grammar.<br>
+        • Don’t trust urgent scare tactics like “act now”.<br>
+        • Use official apps or websites instead of in-message links.
+    ` : `
+        ✅ This message appears safe.<br><br>
+        👉 <b>What to do:</b> You can continue normally, but stay alert for anything unusual.<br><br>
+        💡 <b>Safety tips:</b><br>
+        • Double-check the sender/source if unsure.<br>
+        • Be careful with unexpected links or files.<br>
+        • Keep your device and security tools updated.<br>
+        • When in doubt, verify through official channels.
+    `;
+
     return `
         <div style="color: ${color}; font-weight: 600;">
             ${icon} <strong>${result}</strong>
@@ -679,11 +699,8 @@ function formatResult(data) {
         <div style="margin-top: 8px; font-size: 0.9rem; opacity: 0.8;">
             Confidence: <strong>${confidence}</strong>
         </div>
-        <div id="ai-message"  style="margin-top: 12px; font-size: 0.95rem; color: #fff;">
-            ${isPhishing ? 
-                "⚠️ This message may be a phishing attempt. Stay alert and verify the source before clicking any links." :
-                "✅ This message appears safe, but always double-check the sender and source."
-            }
+        <div id="ai-message" style="margin-top: 12px; font-size: 0.95rem; color: #fff; line-height:1.6; text-align: left;">
+            ${advice}
         </div>
         ${explanation ? `
         <div style="margin-top: 12px; padding: 12px; border: 1px solid rgba(99,102,241,0.3); border-radius: 10px; background: rgba(30,41,59,0.6); color: #e2e8f0;">
@@ -692,6 +709,7 @@ function formatResult(data) {
         </div>` : ''}
     `;
 }
+
 
 // Save to history
 function saveToHistory(message, result) {
