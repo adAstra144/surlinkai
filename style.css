@@ -2773,3 +2773,7 @@ ul, li, p, h1, h2, h3, h4, h5, h6 {
   background: transparent;
   padding: 0 8px;
 }
+
+body.light-theme .fa-images {
+  color: #fff !important;
+}
