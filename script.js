@@ -679,7 +679,7 @@ function formatResult(data) {
         <div style="margin-top: 8px; font-size: 0.9rem; opacity: 0.8;">
             Confidence: <strong>${confidence}</strong>
         </div>
-        <div style="margin-top: 12px; font-size: 0.95rem; color: #cbd5e1;">
+        <div style="margin-top: 12px; font-size: 0.95rem; color: #000000;">
             ${isPhishing ? 
                 "⚠️ This message may be a phishing attempt. Stay alert and verify the source before clicking any links." :
                 "✅ This message appears safe, but always double-check the sender and source."
@@ -1101,3 +1101,80 @@ window.addEventListener("load", () => {
     }, 300); // match your splash fade-out transition
   }, 1900); // how long splash stays visible
 });
+
+// === Sidebar swipe (mobile) ===
+(function () {
+  const sidebar = document.getElementById("sidebar");
+  const backdrop = document.getElementById("backdrop");
+  const menuToggle = document.getElementById("menuToggle");
+
+  let startX = 0, startY = 0;
+  let isSwiping = false;
+
+  function isMobile() {
+    return window.matchMedia("(max-width:1024px)").matches;
+  }
+
+  // Start swipe detection
+  document.addEventListener("touchstart", (e) => {
+    if (!isMobile()) return;
+
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+
+    // Open if starting from left edge (within 150px)
+    if (startX <= 150 && !sidebar.classList.contains("open")) {
+      isSwiping = "open";
+    }
+
+    // Close if starting inside the sidebar (within 50px from its right edge)
+    if (
+      sidebar.classList.contains("open") &&
+      startX >= sidebar.offsetWidth - 50
+    ) {
+      isSwiping = "close";
+    }
+  });
+
+  document.addEventListener("touchmove", (e) => {
+    if (!isSwiping) return;
+
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+
+    // cancel if vertical movement > horizontal
+    if (Math.abs(dy) > Math.abs(dx)) {
+      isSwiping = false;
+      return;
+    }
+
+    if (isSwiping === "open" && dx > 80) {
+      // Open sidebar
+      sidebar.classList.add("open");
+      if (backdrop) {
+        backdrop.hidden = false;
+        backdrop.style.pointerEvents = "auto";
+        backdrop.style.opacity = "0.4";
+      }
+      if (menuToggle) menuToggle.setAttribute("aria-expanded", "true");
+      document.body.classList.add("no-scroll");
+      isSwiping = false;
+    }
+
+    if (isSwiping === "close" && dx < -80) {
+      // Close sidebar
+      sidebar.classList.remove("open");
+      if (backdrop) {
+        backdrop.hidden = true;
+        backdrop.style.pointerEvents = "none";
+      }
+      if (menuToggle) menuToggle.setAttribute("aria-expanded", "false");
+      document.body.classList.remove("no-scroll");
+      isSwiping = false;
+    }
+  });
+
+  document.addEventListener("touchend", () => {
+    isSwiping = false;
+  });
+})();
