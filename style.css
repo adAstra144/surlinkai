@@ -1913,6 +1913,9 @@ body.light-theme .timestamp {
 body.light-theme .empty-history {
   color: #64748b;
 } 
+
+body.light-theme #ai-message {
+  color: #000000 !important;
  
  /* Space between Account and Appearance sections */
 .account-section + .theme-toggle-section {
