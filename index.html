@@ -38,7 +38,7 @@
     <button id="menuToggle" class="hamburger" aria-label="Toggle menu" aria-expanded="false" aria-controls="sidebar">☰</button>
     <div class="mobile-brand">
       <span id="header-icon" class="brand-logo"><img src="assets/logo.avif" alt="SûrLink logo" ></span>
-      <span class="brand-title">SûrLink</span>
+      <span class="brand-title" data-i18n="title">SûrLink</span>
     </div>
   </div>
 
@@ -51,60 +51,59 @@
           <span class="brand-title">SûrLink</span>
         </div>
         
-        <p class="tagline">Built to Detect,
+        <p class="tagline" data-i18n="tagline">Built to Detect,
                     <br> Designed to Protect</p>
         
         <nav class="sidebar-nav">
           <button class="nav-btn active" data-section="chat" onclick="showSection('chat')">
             <span class="nav-icon">💬</span>
-            <span class="nav-text">Chat Scanner</span>
+            <span class="nav-text" data-i18n="chat_scanner">Chat Scanner</span>
           </button>
-          
           <button class="nav-btn" data-section="history" onclick="showSection('history')">
             <span class="nav-icon">📁</span>
-            <span class="nav-text">Scan History</span>
+            <span class="nav-text" data-i18n="scan_history">Scan History</span>
           </button>
           <button class="nav-btn" data-section="stats" onclick="showSection('stats')">
             <span class="nav-icon">📊</span>
-            <span class="nav-text">Statistics</span>
+            <span class="nav-text" data-i18n="statistics">Statistics</span>
           </button>
           <button class="nav-btn" data-section="quiz" onclick="showSection('quiz')">
             <span class="nav-icon">🧠</span>
-            <span class="nav-text">Quiz</span>
+            <span class="nav-text" data-i18n="quiz">Quiz</span>
           </button>
           <button class="nav-btn" data-section="status" onclick="showSection('status')">
             <span class="nav-icon">🤖</span>
-            <span class="nav-text">API Status</span>
+            <span class="nav-text" data-i18n="api_status">API Status</span>
           </button> 
           <button class="nav-btn" data-section="feedback" onclick="showSection('feedback')">
             <span class="nav-icon">💬</span>
-            <span class="nav-text">Feedback</span>
+            <span class="nav-text" data-i18n="feedback">Feedback</span>
           </button>
         </nav>
 
         <!-- Sidebar now only holds theme toggle on mobile; other views moved to main -->
    <!-- User Account Section -->
 <div class="account-section">
-  <h4>Account</h4>
+  <h4 data-i18n="account">Account</h4>
   <div id="userInfo" class="user-info">
     <div class="user-row" style="display: flex; align-items: center; gap: 10px;">
       <img id="userPic" src="" alt="Profile" style="display:none; width:32px; height:32px; border-radius:50%;">
       <p id="userName" style="font-weight:500; margin:0;"></p>
     </div>
-    <p id="userEmail" style="margin-top:8px;">Not logged in</p>
+    <p id="userEmail" style="margin-top:8px;" data-i18n="not_logged_in">Not logged in</p>
   </div>
   <hr style="margin: 12px 0; border: none; border-top: 1px solid #475569; opacity: 0.3;">
   <div class="user-actions">
-    <button id="loginBtn" class="scan-btn outline" onclick="openLoginModal()">Login / Register</button>
-    <button id="logoutBtn" class="scan-btn outline hidden" onclick="logout()">Logout</button>
+    <button id="loginBtn" class="scan-btn outline" onclick="openLoginModal()" data-i18n="login_register">Login / Register</button>
+    <button id="logoutBtn" class="scan-btn outline hidden" onclick="logout()" data-i18n="logout">Logout</button>
   </div>
 </div>
    
         <!-- Theme Toggle Section -->
         <div class="theme-toggle-section">
-          <h4>Appearance</h4>
+          <h4 data-i18n="appearance">Appearance</h4>
           <div class="theme-toggle">
-            <span class="theme-label">🌙 Dark Theme</span>
+            <span class="theme-label" data-i18n="dark_theme">🌙 Dark Theme</span>
             <label class="switch">
               <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
               <span class="slider"></span>
@@ -112,6 +111,15 @@
           </div>
         </div>
       </div>
+
+      <div class="language-section">
+        <label for="languageSelect" data-i18n="language_label">Language</label>
+        <select id="languageSelect"">
+          <option value="en">English</option>
+          <option value="tl">Tagalog</option>
+        </select>
+      </div>
+      
     </aside>
 
     <!-- Main Content -->
@@ -121,14 +129,14 @@
         <div class="chat-window" id="chatWindow" role="log" aria-live="polite">
           <div class="welcome-message">
             <div class="welcome-icon"><img src="assets/logo.avif" alt="SûrLink logo"></div>
-            <h3>Welcome to SûrLink</h3>
-            <p>I'm here to help you detect phishing attempts in messages, emails, and text content using advanced AI technology.</p>
+            <h3 data-i18n="welcome">Welcome to SûrLink</h3>
+            <p data-i18n="welcome_desc">I'm here to help you detect phishing attempts in messages, emails, and text content using advanced AI technology.</p>
             <div class="example-messages">
-              <p><strong>Try these examples:</strong></p>
+              <p><strong data-i18n="try_examples">Try these examples:</strong></p>
               <ul>
-                <li>"Your account has been suspended. Click here to verify immediately."</li>
-                <li>"Congratulations! You've won $1000. Claim your prize now."</li>
-                <li>"Your package is ready for pickup. Click to confirm delivery."</li>
+                <li data-i18n="example1">"Your account has been suspended. Click here to verify immediately."</li>
+                <li data-i18n="example2">"Congratulations! You've won $1000. Claim your prize now."</li>
+                <li data-i18n="example3">"Your package is ready for pickup. Click to confirm delivery."</li>
               </ul>
             </div>
           </div>
@@ -162,10 +170,11 @@
             placeholder="Enter your message here... "
             rows="3"
             aria-label="Message to scan"
+            data-i18n-placeholder="message_placeholder"
           ></textarea>
           <button id="scanBtn" class="scan-btn" aria-label="Scan message for phishing">
             <span class="btn-icon" role="img" aria-label="Scan">🔍</span>
-            <span class="btn-text">Scan</span>
+            <span class="btn-text" data-i18n="scan">Scan</span>
           </button>
         </div>
       </div>
@@ -173,9 +182,9 @@
       <!-- History (Main) -->
       <div id="historyMainSection" class="content-section">
         <div class="content-scroll">
-          <h3 style="margin-bottom:12px;">Recent Scans</h3>
+          <h3 style="margin-bottom:12px;" data-i18n="recent_scans">Recent Scans</h3>
           <div class="history-list" id="historyList">
-            <p class="empty-history">No scans yet</p>
+            <p class="empty-history" data-i18n="no_scans">No scans yet</p>
           </div>
         </div>
       </div>
@@ -183,19 +192,19 @@
       <!-- Stats (Main) -->
       <div id="statsMainSection" class="content-section">
         <div class="content-scroll">
-          <h3 style="margin-bottom:12px;">Scan Statistics</h3>
+          <h3 style="margin-bottom:12px;" data-i18n="scan_statistics">Scan Statistics</h3>
           <div class="stats-grid">
             <div class="stat-item">
               <span class="stat-number" id="totalScans">0</span>
-              <span class="stat-label">Total Scans</span>
+              <span class="stat-label" data-i18n="total_scans">Total Scans</span>
             </div>
             <div class="stat-item">
               <span class="stat-number" id="phishingScans">0</span>
-              <span class="stat-label">Phishing Detected</span>
+              <span class="stat-label" data-i18n="phishing_detected">Phishing Detected</span>
             </div>
             <div class="stat-item">
               <span class="stat-number" id="safeScans">0</span>
-              <span class="stat-label">Safe Messages</span>
+              <span class="stat-label" data-i18n="safe_messages">Safe Messages</span>
               
             </div>
           </div>
@@ -208,10 +217,10 @@
       <!-- Status (Main) -->
       <div id="statusMainSection" class="content-section">
         <div class="content-scroll">
-          <h3 style="margin-bottom:12px;">API Status</h3>
+          <h3 style="margin-bottom:12px;" data-i18n="api_status">API Status</h3>
           <div class="api-status" id="apiStatus">
             <span class="status-indicator" id="statusIndicator" role="status" aria-live="polite">●</span>
-            <span class="status-text" id="statusText">Checking...</span>
+            <span class="status-text" id="statusText" data-i18n="checking">Checking...</span>
           </div>
         </div>
       </div>
@@ -219,7 +228,7 @@
       <!-- Quiz (Main) -->
       <div id="quizMainSection" class="content-section">
         <div class="content-scroll">
-          <h3 style="margin-bottom:12px;">Phishing Awareness Quiz</h3>
+          <h3 style="margin-bottom:12px;" data-i18n="quiz">Phishing Awareness Quiz</h3>
           <div id="quizContainer" class="quiz-card">
             <div class="quiz-top">
               <div id="quizProgress" class="quiz-progress" aria-live="polite"></div>
@@ -238,25 +247,26 @@
    <!-- Feedback (Main) -->
 <div id="feedbackMainSection" class="content-section">
   <div class="content-scroll">
-    <h3 style="margin-bottom:12px;">We value your feedback</h3>
+    <h3 style="margin-bottom:12px;" data-i18n="feedback_title">We value your feedback</h3>
     <div class="feedback-card">
-      <label for="feedbackType">Feedback Type</label>
+      <label for="feedbackType" data-i18n="feedback_type">Feedback Type</label>
       <select id="feedbackType" aria-label="Select feedback type">
-        <option value="suggestion">💡 Suggestion</option>
-        <option value="bug">🐞 Bug Report</option>
-        <option value="question">❓ Question</option>
+        <option value="suggestion" data-i18n="suggestion">💡 Suggestion</option>
+        <option value="bug" data-i18n="bug">🐞 Bug Report</option>
+        <option value="question" data-i18n="question">❓ Question</option>
       </select>
 
-      <label for="feedbackMessage">Your Feedback</label>
+      <label for="feedbackMessage" data-i18n="your_feedback">Your Feedback</label>
       <textarea 
         id="feedbackMessage" 
         placeholder="Type your feedback here..."
         aria-label="Feedback message"
+        data-i18n-placeholder="feedback_placeholder"
       ></textarea>
 
       <div class="feedback-actions">
-        <button id="submitFeedback" class="scan-btn">Submit</button>
-        <button id="clearFeedback" class="scan-btn outline">Clear</button>
+        <button id="submitFeedback" class="scan-btn" data-i18n="submit">Submit</button>
+        <button id="clearFeedback" class="scan-btn outline" data-i18n="clear">Clear</button>
       </div>
 
       <div id="feedbackStatus" class="feedback-status" aria-live="polite"></div>
@@ -273,16 +283,16 @@
 <div id="authModal" class="modal hidden">
   <div class="modal-content">
     <span class="close-btn" onclick="closeLoginModal()">X</span>
-    <h3 id="authTitle">Login</h3>
+    <h3 id="authTitle" data-i18n="login">Login</h3>
 
-    <input type="email" id="authEmail" placeholder="Email" required>
-    <input type="password" id="authPassword" placeholder="Password" required>
+    <input type="email" id="authEmail" placeholder="Email" required data-i18n-placeholder="email">
+    <input type="password" id="authPassword" placeholder="Password" required data-i18n-placeholder="password">
     
-    <button class="scan-btn" onclick="handleAuthAction()">Login</button>
+    <button class="scan-btn" onclick="handleAuthAction()" data-i18n="login">Login</button>
 
     <div class="auth-divider-modern">
       <span class="auth-divider-line"></span>
-      <span class="auth-divider-text">OR</span>
+      <span class="auth-divider-text" data-i18n="or">OR</span>
       <span class="auth-divider-line"></span>
     </div>
 
@@ -318,7 +328,7 @@
       }
     </script>
 
-    <p id="authSwitch" >
+    <p id="authSwitch" data-i18n="dont_have_account">
       Don't have an account? <a href="#" onclick="switchAuthMode(event)">Register here</a>
     </p>
   </div>

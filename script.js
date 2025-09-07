@@ -665,33 +665,13 @@ async function scanMessage() {
 
 // Format the result for display
 function formatResult(data) {
+    const lang = localStorage.getItem('surLinkLang') || 'en';
     const { result, confidence } = data;
     const isPhishing = result.toLowerCase().includes("phishing");
     const explanation = (data && typeof data.explanation === 'string' && data.explanation.trim()) ? data.explanation.trim() : '';
-    
     const icon = isPhishing ? "🚨" : "✅";
     const color = isPhishing ? "#ef4444" : "#10b981";
-
-    // Expanded safe/phishing advice
-    const advice = isPhishing ? `
-        ⚠️ This message looks suspicious and may be a phishing attempt.<br><br>
-        👉 <b>What to do:</b> Do not reply, share personal details, or click any links/attachments.<br><br>
-        🛡️ Best action: ignore, delete, or report it.<br><br>
-        🔒 <b>How to avoid phishing:</b><br>
-        • Check the sender’s email/number carefully.<br>
-        • Watch for spelling mistakes or odd grammar.<br>
-        • Don’t trust urgent scare tactics like “act now”.<br>
-        • Use official apps or websites instead of in-message links.
-    ` : `
-        ✅ This message appears safe.<br><br>
-        👉 <b>What to do:</b> You can continue normally, but stay alert for anything unusual.<br><br>
-        💡 <b>Safety tips:</b><br>
-        • Double-check the sender/source if unsure.<br>
-        • Be careful with unexpected links or files.<br>
-        • Keep your device and security tools updated.<br>
-        • When in doubt, verify through official channels.
-    `;
-
+    const advice = isPhishing ? translations[lang].phishing_advice : translations[lang].safe_advice;
     return `
         <div style="color: ${color}; font-weight: 600;">
             ${icon} <strong>${result}</strong>
@@ -704,7 +684,7 @@ function formatResult(data) {
         </div>
         ${explanation ? `
         <div style="margin-top: 12px; padding: 12px; border: 1px solid rgba(99,102,241,0.3); border-radius: 10px; background: rgba(30,41,59,0.6); color: #e2e8f0;">
-            <div style="font-weight:600; margin-bottom:6px; color:#a5b4fc;">Why this decision</div>
+            <div style="font-weight:600; margin-bottom:6px; color:#a5b4fc;">${translations[lang].why_decision}</div>
             <div style="white-space: pre-wrap; line-height:1.5;">${explanation.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
         </div>` : ''}
     `;
@@ -717,8 +697,8 @@ function saveToHistory(message, result) {
     const historyItem = document.createElement("div");
     historyItem.className = `history-item ${isPhishing ? 'phishing' : 'safe'}`;
     historyItem.setAttribute('role', 'listitem');
-    
     const truncatedMessage = message.length > 50 ? message.substring(0, 50) + "..." : message;
+    
     historyItem.innerHTML = `
         <div style="font-weight: 500; margin-bottom: 4px;">
             ${isPhishing ? "🚨 Phishing" : "✅ Safe"}
@@ -1196,3 +1176,228 @@ window.addEventListener("load", () => {
     isSwiping = false;
   });
 })();
+
+
+// Translate website 
+const translations = {
+  en: {
+    title: "SûrLink",
+    tagline: "Built to Detect, Designed to Protect",
+    chat_scanner: "Chat Scanner",
+    scan_history: "Scan History",
+    statistics: "Statistics",
+    quiz: "Quiz",
+    api_status: "API Status",
+    feedback: "Feedback",
+    account: "Account",
+    not_logged_in: "Not logged in",
+    login_register: "Login / Register",
+    logout: "Logout",
+    appearance: "Appearance",
+    dark_theme: "🌙 Dark Theme",
+    welcome: "Welcome to SûrLink",
+    welcome_desc: "I'm here to help you detect phishing attempts in messages, emails, and text content using advanced AI technology.",
+    try_examples: "Try these examples:",
+    example1: "Your account has been suspended. Click here to verify immediately.",
+    example2: "Congratulations! You've won $1000. Claim your prize now.",
+    example3: "Your package is ready for pickup. Click to confirm delivery.",
+    message_placeholder: "Enter your message here...",
+    scan: "Scan",
+    recent_scans: "Recent Scans",
+    no_scans: "No scans yet",
+    scan_statistics: "Scan Statistics",
+    total_scans: "Total Scans",
+    phishing_detected: "Phishing Detected",
+    safe_messages: "Safe Messages",
+    checking: "Checking...",
+    feedback_title: "We value your feedback",
+    feedback_type: "Feedback Type",
+    suggestion: "💡 Suggestion",
+    bug: "🐞 Bug Report",
+    question: "❓ Question",
+    your_feedback: "Your Feedback",
+    feedback_placeholder: "Type your feedback here...",
+    submit: "Submit",
+    clear: "Clear",
+    login: "Login",
+    register: "Register",
+    or: "OR",
+    dont_have_account: "Don't have an account? Register here",
+    already_have_account: "Already have an account? Login here",
+    safe_advice: `✅ This message appears safe.<br><br>👉 <b>What to do:</b> You can continue normally, but stay alert for anything unusual.<br><br>💡 <b>Safety tips:</b><br>• Double-check the sender/source if unsure.<br>• Be careful with unexpected links or files.<br>• Keep your device and security tools updated.<br>• When in doubt, verify through official channels.`,
+    phishing_advice: `⚠️ This message looks suspicious and may be a phishing attempt.<br><br>👉 <b>What to do:</b> Do not reply, share personal details, or click any links/attachments.<br><br>🛡️ Best action: ignore, delete, or report it.<br><br>🔒 <b>How to avoid phishing:</b><br>• Check the sender’s email/number carefully.<br>• Watch for spelling mistakes or odd grammar.<br>• Don’t trust urgent scare tactics like “act now”.<br>• Use official apps or websites instead of in-message links.`,
+    why_decision: "Why this decision",
+  },
+  tl: {
+    title: "SûrLink",
+    tagline: "Gawa para Mag-detect, Disenyo para Magprotekta",
+    chat_scanner: "Chat Scanner",
+    scan_history: "Kasaysayan ng Scan",
+    statistics: "Istatistika",
+    quiz: "Pagsusulit",
+    api_status: "Kalagayan ng API",
+    feedback: "Puna",
+    account: "Account",
+    not_logged_in: "Hindi naka-login",
+    login_register: "Login / Rehistro",
+    logout: "Logout",
+    appearance: "Hitsura",
+    dark_theme: "🌙 Madilim",
+    welcome: "Maligayang Pagdating sa SûrLink",
+    welcome_desc: "Narito ako para tulungan kang matukoy ang mga pagtatangkang phishing sa mga mensahe, email, at teksto gamit ang makabagong AI technology.",
+    try_examples: "Subukan ang mga halimbawang ito:",
+    example1: "Ang iyong account ay nasuspinde. I-click dito para agad na ma-verify.",
+    example2: "Binabati kita! Nanalo ka ng $1000. I-claim ang iyong premyo ngayon.",
+    example3: "Handa na ang iyong package para kunin. I-click para kumpirmahin ang delivery.",
+    message_placeholder: "Ilagay ang iyong mensahe dito...",
+    scan: "I-scan",
+    recent_scans: "Mga Kamakailang Scan",
+    no_scans: "Wala pang scan",
+    scan_statistics: "Istatistika ng Scan",
+    total_scans: "Kabuuang Scan",
+    phishing_detected: "Natukoy na Phishing",
+    safe_messages: "Ligtas na Mensahe",
+    checking: "Sinusuri...",
+    feedback_title: "Pinahahalagahan namin ang iyong puna",
+    feedback_type: "Uri ng Puna",
+    suggestion: "💡 Suhestiyon",
+    bug: "🐞 Ulat ng Bug",
+    question: "❓ Tanong",
+    your_feedback: "Iyong Puna",
+    feedback_placeholder: "I-type ang iyong puna dito...",
+    submit: "Ipasa",
+    clear: "I-clear",
+    login: "Login",
+    register: "Rehistro",
+    or: "O",
+    dont_have_account: "Wala ka pang account? Mag-rehistro dito",
+    already_have_account: "May account ka na? Mag-login dito",
+    safe_advice: `✅ Ang mensaheng ito ay mukhang ligtas.<br><br>👉 <b>Anong gagawin:</b> Maaari kang magpatuloy, ngunit manatiling alerto sa anumang kakaiba.<br><br>💡 <b>Mga tip sa kaligtasan:</b><br>• Suriing mabuti ang pinagmulan kung nagdududa.<br>• Mag-ingat sa di-inaasahang link o file.<br>• Panatilihing updated ang iyong device at security tools.<br>• Kapag nagdududa, mag-verify sa opisyal na paraan.`,
+    phishing_advice: `⚠️ Ang mensaheng ito ay kahina-hinala at maaaring phishing attempt.<br><br>👉 <b>Anong gagawin:</b> Huwag sumagot, magbahagi ng personal na detalye, o mag-click ng anumang link/attachment.<br><br>🛡️ Pinakamainam: balewalain, burahin, o i-report ito.<br><br>🔒 <b>Paano iwasan ang phishing:</b><br>• Suriing mabuti ang email/number ng nagpadala.<br>• Mag-ingat sa maling spelling o kakaibang grammar.<br>• Huwag magtiwala sa mga nagmamadaling pananakot tulad ng “kumilos agad”.<br>• Gamitin ang opisyal na app o website sa halip na link sa mensahe.`,
+    why_decision: "Bakit ito ang desisyon",
+  }
+};
+
+// --- Language Switcher Logic ---
+
+function applyTranslations(lang) {
+  // Update all elements with data-i18n
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (translations[lang][key]) {
+      el.innerHTML = translations[lang][key];
+    }
+  });
+
+  // Update placeholders
+  if (messageInput && translations[lang].message_placeholder) {
+    messageInput.placeholder = translations[lang].message_placeholder;
+  }
+  const feedbackMsg = document.getElementById('feedbackMessage');
+  if (feedbackMsg && translations[lang].feedback_placeholder) {
+    feedbackMsg.placeholder = translations[lang].feedback_placeholder;
+  }
+
+  // Auth modal
+  const authTitle = document.getElementById('authTitle');
+  if (authTitle && translations[lang][authMode]) {
+    authTitle.innerText = translations[lang][authMode];
+  }
+  const authBtn = document.querySelector('#authModal button.scan-btn');
+  if (authBtn && translations[lang][authMode]) {
+    authBtn.innerText = translations[lang][authMode];
+  }
+  const authSwitch = document.getElementById('authSwitch');
+  if (authSwitch) {
+    authSwitch.innerHTML = authMode === "login"
+      ? translations[lang].dont_have_account
+      : translations[lang].already_have_account;
+  }
+
+  // Feedback type options
+  const feedbackType = document.getElementById('feedbackType');
+  if (feedbackType) {
+    feedbackType.options[0].text = translations[lang].suggestion;
+    feedbackType.options[1].text = translations[lang].bug;
+    feedbackType.options[2].text = translations[lang].question;
+  }
+
+  // Feedback buttons
+  const submitBtn = document.getElementById('submitFeedback');
+  if (submitBtn && translations[lang].submit) submitBtn.innerText = translations[lang].submit;
+  const clearBtn = document.getElementById('clearFeedback');
+  if (clearBtn && translations[lang].clear) clearBtn.innerText = translations[lang].clear;
+
+  // Scan button
+  if (scanBtn && translations[lang].scan) {
+    const btnText = scanBtn.querySelector('.btn-text');
+    if (btnText) btnText.innerText = translations[lang].scan;
+  }
+}
+
+function applyTranslations(lang) {
+  // Update all elements with data-i18n
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (translations[lang][key]) {
+      el.innerHTML = translations[lang][key];
+    }
+  });
+
+  // Update placeholders
+  if (messageInput && translations[lang].message_placeholder) {
+    messageInput.placeholder = translations[lang].message_placeholder;
+  }
+
+  // Update all AI responses in chat window to the selected language
+  const aiBubbles = document.querySelectorAll('.message-bubble.ai');
+  aiBubbles.forEach(bubble => {
+    const bubbleContent = bubble.querySelector('.bubble-content');
+    if (bubbleContent) {
+      const resultMatch = bubbleContent.innerHTML.match(/<strong>(.*?)<\/strong>/);
+      const confidenceMatch = bubbleContent.innerHTML.match(/Confidence: <strong>(.*?)<\/strong>/);
+      const explanationMatch = bubbleContent.innerHTML.match(/<div style="white-space: pre-wrap; line-height:1.5;">([\s\S]*?)<\/div>/);
+      let result = resultMatch ? resultMatch[1] : '';
+      let confidence = confidenceMatch ? confidenceMatch[1] : '';
+      let explanation = explanationMatch ? explanationMatch[1] : '';
+      const isPhishing = result.toLowerCase().includes("phishing");
+      const icon = isPhishing ? "🚨" : "✅";
+      const color = isPhishing ? "#ef4444" : "#10b981";
+      const advice = isPhishing ? translations[lang].phishing_advice : translations[lang].safe_advice;
+      bubbleContent.innerHTML = `
+        <div style="color: ${color}; font-weight: 600;">
+            ${icon} <strong>${result}</strong>
+        </div>
+        <div style="margin-top: 8px; font-size: 0.9rem; opacity: 0.8;">
+            Confidence: <strong>${confidence}</strong>
+        </div>
+        <div id="ai-message" style="margin-top: 12px; font-size: 0.95rem; color: #fff; line-height:1.6; text-align: left;">
+            ${advice}
+        </div>
+        ${explanation ? `
+        <div style="margin-top: 12px; padding: 12px; border: 1px solid rgba(99,102,241,0.3); border-radius: 10px; background: rgba(30,41,59,0.6); color: #e2e8f0;">
+            <div style="font-weight:600; margin-bottom:6px; color:#a5b4fc;">${translations[lang].why_decision}</div>
+            <div style="white-space: pre-wrap; line-height:1.5;">${explanation}</div>
+        </div>` : ''}
+      `;
+    }
+  });
+}
+
+// Listen for language change
+const langSelect = document.getElementById('languageSelect');
+if (langSelect) {
+  langSelect.addEventListener('change', function() {
+    const lang = this.value;
+    localStorage.setItem('surLinkLang', lang);
+    applyTranslations(lang);
+  });
+}
+
+// On load, set language from localStorage or default
+window.addEventListener('DOMContentLoaded', () => {
+  const lang = localStorage.getItem('surLinkLang') || 'en';
+  const langSelect = document.getElementById('languageSelect');
+  if (langSelect) langSelect.value = lang;
+  applyTranslations(lang);
+});
