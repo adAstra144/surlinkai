@@ -675,7 +675,7 @@ function formatResult(data) {
     // Expanded safe/phishing advice
     const advice = isPhishing ? `
         ⚠️ This message looks suspicious and may be a phishing attempt.<br><br>
-        👉 <b>What to do:</b> Do not reply, share personal details, or click any links/attachments.<br>
+        👉 <b>What to do:</b> Do not reply, share personal details, or click any links/attachments.<br><br>
         🛡️ Best action: ignore, delete, or report it.<br><br>
         🔒 <b>How to avoid phishing:</b><br>
         • Check the sender’s email/number carefully.<br>
