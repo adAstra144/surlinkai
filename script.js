@@ -773,7 +773,7 @@ async function callExplainerModel(message, label) {
     // Try APIFreeLLM client if loaded on the page
     try {
         if (window.apifree && typeof apifree.chat === 'function') {
-            const prompt = `You are an assistant that explains why a message is classified as "${label}". Provide a concise and user-friendly explanation. Message:\n\n${message}`;
+            const prompt = `Explain why a message is classified as "${label}". Answer in one short explanation only. No greetings, no introductions, no extra sentences, no closing remarks. Output only the explanation. Message:\n\n${message}`;
             const resp = await apifree.chat(prompt);
             // apifree.chat may return a string or an object depending on implementation
             if (typeof resp === 'string') return resp.trim();
