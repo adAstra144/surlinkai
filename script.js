@@ -14,7 +14,7 @@ const statusText = document.getElementById("statusText");
 let totalScans = 0;
 let phishingScans = 0;
 let safeScans = 0;
-let apiUrl = "https://adAStra144-Anti-Phishing-Scanner-0.hf.space";
+let apiUrl = "https://adastra144-anti-phishing-scanner-0.hf.space";
 let explainerUrl = "";
 let isScanning = false;
 
@@ -614,21 +614,7 @@ async function scanMessage() {
         
         // Get explanation from the explainer AI model
         try {
-            const expResp = await fetch(`${explainerUrl}/explain`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    message: message,
-                    label: data.result // "Safe" or "Phishing"
-                })
-            });
-            
-            if (expResp.ok) {
-                const expData = await expResp.json();
-                data.explanation = expData.explanation || "";
-            }
+            data.explanation = await callExplainerModel(message, data.result);
         } catch (error) {
             console.log("Explanation service unavailable:", error);
             // Continue without explanation
@@ -780,6 +766,46 @@ function updateApiUrl(url) {
 function updateExplainerUrl(url) {
     explainerUrl = url;
     checkApiStatus();
+}
+
+// APIFreeLLM explainer integration: prefer client-side apifree.chat if available, otherwise fallback to explainerUrl
+async function callExplainerModel(message, label) {
+    // Try APIFreeLLM client if loaded on the page
+    try {
+        if (window.apifree && typeof apifree.chat === 'function') {
+            const prompt = `You are an assistant that explains why a message is classified as "${label}". Provide a concise and user-friendly explanation. Message:\n\n${message}`;
+            const resp = await apifree.chat(prompt);
+            // apifree.chat may return a string or an object depending on implementation
+            if (typeof resp === 'string') return resp.trim();
+            if (resp && typeof resp === 'object') {
+                // try common fields
+                if (resp.response) return String(resp.response).trim();
+                if (resp.text) return String(resp.text).trim();
+            }
+            return '';
+        }
+    } catch (err) {
+        console.warn('APIFree explain error', err);
+    }
+
+    // Fallback: call configured explainerUrl (server-side) if provided
+    if (explainerUrl) {
+        try {
+            const expResp = await fetch(`${explainerUrl}/explain`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message, label })
+            });
+            if (expResp.ok) {
+                const expData = await expResp.json();
+                return expData.explanation || '';
+            }
+        } catch (e) {
+            console.warn('Explainer fetch error', e);
+        }
+    }
+
+    return '';
 }
 
 // Auto-check API status every 30 seconds
