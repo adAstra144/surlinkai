@@ -817,8 +817,8 @@ async function callExplainerModel(message, label) {
     
     // Language-specific prompts
     const prompts = {
-        en: `Explain why a message is classified as "${label}". Answer in one short explanation only. No greetings, no introductions, no extra sentences, no closing remarks. Output only the explanation. Message:\n\n${message}`,
-        tl: `Ipaliwanag kung bakit ang mensahe ay kinategorya bilang "${label}". Isang maikling paliwanag lamang. Walang pagbati, walang introduksyon, walang dagdag na pangungusap, walang pagtatapos. Ilagay lamang ang paliwanag. Mensahe:\n\n${message}`
+        en: `Your a robot that's good at identifying phishing and safe messages. Explain and point out why the message is classified as "${label}". Answer in one short explanation only. No greetings, no introductions, no closing remarks. Output only the explanation. Message:\n\n${message}`,
+        tl: `Ikaw ay isang robot na magaling magtukoy ng phishing at safe messages. Ipaliwanag at ipakita kung bakit ang mensahe ay kinategorya bilang "${label}". Isang maikling paliwanag lamang. Walang pagbati, walang introduksyon, walang pagtatapos. Ilagay lamang ang paliwanag kung bakit. Mensahe:\n\n${message}`
     };
     
     const prompt = prompts[lang] || prompts.en;  // Fallback to English if language not supported
