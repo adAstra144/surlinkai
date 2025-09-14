@@ -1578,6 +1578,7 @@ body.light-theme .camera-actions .flip-btn:hover {
   
   .welcome-message {
     padding: 16px 0;
+    text-align: center;
   }
   
   .welcome-icon {
@@ -2251,7 +2252,7 @@ body.light-theme #ai-message {
   font-weight: 700;
   background: linear-gradient(135deg,#6366f1,#8b5cf6);
   color: #fff;
-  border-radius: 16px 16px 0 0;
+  border-radius:  16px 16px 0 0;
 }
 
 .onboard-modal .body {
@@ -2707,7 +2708,7 @@ body.light-theme .dropdown-option:hover {
   overflow: hidden;
   margin: 0 auto;
   position: relative;
-  box-shadow: 0 0 15px rgba(99, 102, 241, 0.5) inset;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3) inset;
 }
 
 .splash-loader::after {
@@ -2852,4 +2853,66 @@ body.light-theme .language-section select {
   background: #fff;
   color: #1e293b;
   border-color: rgba(71, 85, 105, 0.4);
+}
+
+
+/* Seperate style for disclaimer and finished screens */
+.onb-disclaimer,
+.onb-finished {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-50%);
+  width: min(460px, calc(100% - 32px));
+  border-radius: 16px;
+  background: #1e2533;
+  border: 1px solid rgba(139,92,246,0.3);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.65);
+  color: #f9fafb;
+  animation: fadeScale 0.35s ease forwards;
+  display: flex;
+  flex-direction: column;
+  z-index: 100000;
+}
+.onb-disclaimer,
+.onb-finished {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-50%);
+  width: min(460px, calc(100% - 32px));
+  border-radius: 16px;
+  background: #1e2533;
+  border: 1px solid rgba(139,92,246,0.3);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.65);
+  color: #f9fafb;
+  animation: fadeScale 0.35s ease forwards;
+  display: flex;
+  flex-direction: column;
+  z-index: 100000;
+}
+.onb-disclaimer .head,
+.onb-finished .head {
+  padding: 16px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg,#6366f1,#8b5cf6);
+  color: #fff;
+  border-radius: 16px 16px 0 0;
+}
+.onb-disclaimer .body,
+.onb-finished .body {
+  padding: 20px;
+  font-size: 0.95rem;
+  color: #e5e7eb;
+  line-height: 1.55;
+  border: none;
+}
+.onb-disclaimer .cta,
+.onb-finished .cta {
+  padding: 14px 18px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  border-top: 1px solid rgba(139,92,246,0.2);
 }
