@@ -813,15 +813,22 @@ function updateExplainerUrl(url) {
 
 // APIFreeLLM explainer integration: prefer client-side apifree.chat if available, otherwise fallback to explainerUrl
 async function callExplainerModel(message, label) {
+    const lang = localStorage.getItem('surLinkLang') || 'en';
+    
+    // Language-specific prompts
+    const prompts = {
+        en: `Explain why a message is classified as "${label}". Answer in one short explanation only. No greetings, no introductions, no extra sentences, no closing remarks. Output only the explanation. Message:\n\n${message}`,
+        tl: `Ipaliwanag kung bakit ang mensahe ay kinategorya bilang "${label}". Isang maikling paliwanag lamang. Walang pagbati, walang introduksyon, walang dagdag na pangungusap, walang pagtatapos. Ilagay lamang ang paliwanag. Mensahe:\n\n${message}`
+    };
+    
+    const prompt = prompts[lang] || prompts.en;  // Fallback to English if language not supported
+
     // Try APIFreeLLM client if loaded on the page
     try {
         if (window.apifree && typeof apifree.chat === 'function') {
-            const prompt = `Explain why a message is classified as "${label}". Answer in one short explanation only. No greetings, no introductions, no extra sentences, no closing remarks. Output only the explanation. Message:\n\n${message}`;
             const resp = await apifree.chat(prompt);
-            // apifree.chat may return a string or an object depending on implementation
             if (typeof resp === 'string') return resp.trim();
             if (resp && typeof resp === 'object') {
-                // try common fields
                 if (resp.response) return String(resp.response).trim();
                 if (resp.text) return String(resp.text).trim();
             }
@@ -837,7 +844,7 @@ async function callExplainerModel(message, label) {
             const expResp = await fetch(`${explainerUrl}/explain`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message, label })
+                body: JSON.stringify({ message, label, lang }) // Include language in request
             });
             if (expResp.ok) {
                 const expData = await expResp.json();
