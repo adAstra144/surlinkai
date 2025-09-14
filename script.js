@@ -579,7 +579,62 @@ function hideProgressBar() {
     adjustChatBottomPadding();
 }
 
-// Scan message function
+// New helper function to display results
+function displayScanResult(classification, confidence, explanation = null) {
+    removeTypingIndicator();
+    hideProgressBar();
+    
+    const isPhishing = classification.toLowerCase().includes("phishing");
+    const icon = isPhishing ? "🚨" : "✅";
+    const color = isPhishing ? "#ef4444" : "#10b981";
+    const lang = localStorage.getItem('surLinkLang') || 'en';
+    const advice = isPhishing ? translations[lang].phishing_advice : translations[lang].safe_advice;
+    
+    let content = `
+        <div style="color: ${color}; font-weight: 600;">
+            ${icon} <strong>${classification}</strong>
+        </div>
+        <div style="margin-top: 8px; font-size: 0.9rem; opacity: 0.8;">
+            Confidence: <strong>${confidence}</strong>
+        </div>
+        <div id="ai-message" style="margin-top: 12px; font-size: 0.95rem; color: #fff; line-height:1.6; text-align: left;">
+            ${advice}
+        </div>`;
+    
+    if (explanation !== null) {
+        content += `
+        <div style="margin-top: 12px; padding: 12px; border: 1px solid rgba(99,102,241,0.3); border-radius: 10px; background: rgba(30,41,59,0.6); color: #e2e8f0;">
+            <div style="font-weight:600; margin-bottom:6px; color:#a5b4fc;">${translations[lang].why_decision}</div>
+            <div style="white-space: pre-wrap; line-height:1.5;">${explanation}</div>
+        </div>`;
+    } else {
+        content += `
+        <div class="explanation-placeholder" style="margin-top: 12px; padding: 12px; border: 1px solid rgba(99,102,241,0.3); border-radius: 10px; background: rgba(30,41,59,0.6); color: #e2e8f0;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                Generating explanation...
+            </div>
+        </div>`;
+    }
+    
+    // Find or create message bubble
+    let bubble = chatWindow.querySelector('.message-bubble.ai:last-child');
+    if (!bubble || !bubble.classList.contains('pending-explanation')) {
+        bubble = document.createElement("div");
+        bubble.className = "message-bubble ai pending-explanation";
+        const bubbleContent = document.createElement("div");
+        bubbleContent.className = "bubble-content";
+        bubble.appendChild(bubbleContent);
+        chatWindow.appendChild(bubble);
+    }
+    
+    bubble.querySelector('.bubble-content').innerHTML = content;
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+// Modified scanMessage function
 async function scanMessage() {
     const message = messageInput.value.trim();
     if (!message || isScanning) return;
@@ -588,60 +643,48 @@ async function scanMessage() {
     scanBtn.disabled = true;
     scanBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Scanning...</span>';
 
-    // Clear input and add user message
     messageInput.value = "";
     messageInput.style.height = "auto";
     appendMessage(message, "user");
-    
-    // Show loading states
     showTypingIndicator();
-    
-    
+
     try {
+        // Get classification first
         const response = await fetch(`${apiUrl}/analyze`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ message })
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         
-        // Get explanation from the explainer AI model
-        try {
-            data.explanation = await callExplainerModel(message, data.result);
-        } catch (error) {
-            console.log("Explanation service unavailable:", error);
-            // Continue without explanation
-        }
+        // Show initial result without explanation
+        displayScanResult(data.result, data.confidence);
         
-        // Remove loading states
-        removeTypingIndicator();
-        hideProgressBar();
-        
-        // Format the response
-        const resultText = formatResult(data);
-        appendMessage(resultText, "ai");
-        
-        // Update stats and history
+        // Update stats and history immediately
         saveToHistory(message, data.result);
         updateStats(data.result);
+        
+        // Get explanation asynchronously
+        try {
+            const explanation = await callExplainerModel(message, data.result);
+            if (explanation) {
+                // Update the result with explanation
+                displayScanResult(data.result, data.confidence, explanation);
+            }
+        } catch (error) {
+            console.log("Explanation service unavailable:", error);
+        }
         
     } catch (error) {
         console.error("Scan Error:", error);
         removeTypingIndicator();
         hideProgressBar();
-        
-        const errorMessage = `
+        appendMessage(`
             ❌ Connection Error<br>
             <small>Unable to connect to the AI service. Please check your internet connection and try again.</small>
-        `;
-        appendMessage(errorMessage, "ai");
+        `, "ai");
     } finally {
         isScanning = false;
         scanBtn.disabled = false;
