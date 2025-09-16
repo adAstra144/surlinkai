@@ -17,7 +17,12 @@
 }
 /* Desktop collapsed sidebar (toggle by hamburger) */
 @media (min-width: 1025px) {
-  .sidebar { width: 280px; transition: width 0.25s ease; }
+  .sidebar { 
+    width: 280px; 
+    transition: width 0.3s ease;
+    left: 0 !important; /* Always show sidebar on desktop */
+    transform: none !important; /* Prevent mobile animations */
+  }
   .sidebar.collapsed { width: 120px; }
   .sidebar.collapsed .brand-title,
   .sidebar.collapsed .tagline,
@@ -32,6 +37,9 @@
   .sidebar.collapsed .nav-btn { justify-content: center; padding: 12px; }
   .sidebar.collapsed .nav-btn .nav-icon { margin: 0 auto; }
   .sidebar.collapsed .nav-icon { font-size: 1.2rem; }
+  
+  /* Ensure backdrop is hidden on desktop */
+  .backdrop { display: none !important; }
 }
 /* Reset and Base Styles */
 :root { --keyboard-offset: 0px; }
@@ -78,13 +86,74 @@ body.no-scroll { overflow: hidden; }
   border-bottom: 1.5px solid rgba(99, 102, 241, 0.25);
   z-index: 10050;
 }
+
+@media (min-width: 1025px) {
+  .mobile-header {
+    padding-left: 24px;
+    padding-right: 24px;
+    background: rgba(15, 23, 42, 0.98);
+  }
+}
 .hamburger {
   background: transparent;
   border: 1px solid rgba(99, 102, 241, 0.5);
   color: #e2e8f0;
-  font-size: 1.2rem;
-  padding: 8px 12px;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
   border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.hamburger-line {
+  width: 24px;
+  height: 2px;
+  background: #fff;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  position: absolute;
+  left: 8px;
+}
+
+.hamburger-line:nth-child(1) {
+  top: 12px;
+  transform-origin: top left;
+}
+
+.hamburger-line:nth-child(2) {
+  top: 19px;
+  opacity: 1;
+}
+
+.hamburger-line:nth-child(3) {
+  top: 26px;
+  transform-origin: bottom left;
+}
+
+/* Animation for open state */
+.hamburger[aria-expanded="true"] .hamburger-line:nth-child(1) {
+  transform: rotate(45deg);
+  width: 28px;
+  top: 11px;
+  left: 10px;
+}
+
+.hamburger[aria-expanded="true"] .hamburger-line:nth-child(2) {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.hamburger[aria-expanded="true"] .hamburger-line:nth-child(3) {
+  transform: rotate(-45deg);
+  width: 28px;
+  top: 27px;
+  left: 10px;
 }
 .mobile-brand { display: flex; align-items: center; gap: 6px; }
  

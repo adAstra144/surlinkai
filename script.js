@@ -184,6 +184,21 @@ function setupMobileMenu() {
 
     if (!menuToggle || !sidebar || !backdrop) return;
 
+    // Set initial state based on screen size
+    const isDesktop = window.matchMedia('(min-width: 1025px)').matches;
+    if (isDesktop) {
+        // Desktop starts expanded
+        sidebar.classList.remove('collapsed');
+        menuToggle.setAttribute('aria-expanded', 'true');
+    } else {
+        // Mobile starts closed
+        sidebar.classList.remove('open');
+        backdrop.hidden = true;
+        backdrop.style.pointerEvents = 'none';
+        document.body.classList.remove('no-scroll');
+        menuToggle.setAttribute('aria-expanded', 'false');
+    }
+
     const openMenu = () => {
         sidebar.classList.add('open');
         backdrop.hidden = false;
@@ -204,6 +219,7 @@ function setupMobileMenu() {
         if (window.matchMedia('(min-width: 1025px)').matches) {
             // Desktop: toggle collapsed state instead of drawer
             sidebar.classList.toggle('collapsed');
+            menuToggle.setAttribute('aria-expanded', !sidebar.classList.contains('collapsed'));
             return;
         }
         const willOpen = !sidebar.classList.contains('open');
@@ -216,6 +232,25 @@ function setupMobileMenu() {
 
     sidebar.addEventListener('click', (e) => {
         e.stopPropagation();
+    });
+
+    // Handle screen size changes
+    window.matchMedia('(min-width: 1025px)').addEventListener('change', (e) => {
+        if (e.matches) {
+            // Switching to desktop
+            sidebar.classList.remove('open');
+            backdrop.hidden = true;
+            backdrop.style.pointerEvents = 'none';
+            document.body.classList.remove('no-scroll');
+            // Start expanded on desktop
+            sidebar.classList.remove('collapsed');
+            menuToggle.setAttribute('aria-expanded', 'true');
+        } else {
+            // Switching to mobile
+            sidebar.classList.remove('collapsed');
+            // Start closed on mobile
+            closeMenu();
+        }
     });
 
     document.addEventListener('keydown', (e) => {
@@ -246,66 +281,74 @@ function setupMobileMenu() {
 function showSection(sectionName) {
     // Hide all content sections
     const contentSections = document.querySelectorAll('.content-section');
-    contentSections.forEach(section => {
-        section.classList.remove('active');
-    });
+    contentSections.forEach(section => section.classList.remove('active'));
     
     // Remove active class from all nav buttons
     const navButtons = document.querySelectorAll('.nav-btn');
-    navButtons.forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // Show selected section (in main window)
-    switch(sectionName) {
-        case 'chat':
-            document.getElementById('chatSection').classList.add('active');
-            {
-                const btn = document.querySelector('[onclick="showSection(\'chat\')"]') || document.querySelector('[onclick="showSection(\"chat\")"]');
-                if (btn) btn.classList.add('active');
-            }
-            break;
-        case 'history':
-            document.getElementById('historyMainSection').classList.add('active');
-            {
-                const btn = document.querySelector('[onclick="showSection(\'history\')"]') || document.querySelector('[onclick="showSection(\"history\")"]');
-                if (btn) btn.classList.add('active');
-            }
-            break;
-        case 'stats':
-            document.getElementById('statsMainSection').classList.add('active');
-            {
-                const btn = document.querySelector('[onclick="showSection(\'stats\')"]') || document.querySelector('[onclick="showSection(\"stats\")"]');
-                if (btn) btn.classList.add('active');
-            }
-            break;
-        case 'status':
-            document.getElementById('statusMainSection').classList.add('active');
-            {
-                const btn = document.querySelector('[onclick="showSection(\'status\')"]') || document.querySelector('[onclick="showSection(\"status\")"]');
-                if (btn) btn.classList.add('active');
-            }
-            break;
-        case 'quiz':
-            document.getElementById('quizMainSection').classList.add('active');
-            {
-                const btn = document.querySelector('[onclick="showSection(\'quiz\')"]') || document.querySelector('[onclick="showSection(\"quiz\")"]');
-                if (btn) btn.classList.add('active');
-            }
-            if (!window.__quizInit) { initQuiz(); window.__quizInit = true; }
-            break;
-            case 'feedback':
-    document.getElementById('feedbackMainSection').classList.add('active');
-    {
-        const btn = document.querySelector('[onclick="showSection(\'feedback\')"]') || 
-                    document.querySelector('[onclick="showSection(\"feedback\")"]');
-        if (btn) btn.classList.add('active');
-    }
-    break;
-    }
-    
+    navButtons.forEach(btn => btn.classList.remove('active'));
 
-    // Auto-close drawer on mobile after navigation to any section
+    // Determine section ID
+    let sectionId = '';
+    switch(sectionName) {
+        case 'chat': sectionId = 'chatSection'; break;
+        case 'history': sectionId = 'historyMainSection'; break;
+        case 'stats': sectionId = 'statsMainSection'; break;
+        case 'status': sectionId = 'statusMainSection'; break;
+        case 'quiz': sectionId = 'quizMainSection'; break;
+        case 'feedback': sectionId = 'feedbackMainSection'; break;
+    }
+
+    const sectionEl = document.getElementById(sectionId);
+    sectionEl.classList.add('active');
+
+    // Set active class on nav button
+    const btn = document.querySelector(`[onclick="showSection('${sectionName}')"]`) ||
+                document.querySelector(`[onclick="showSection(\"${sectionName}\")"]`);
+    if (btn) btn.classList.add('active');
+
+    // Lazy load content if section has data-lazy and not yet loaded
+    if (sectionEl.dataset.lazy && !sectionEl.dataset.loaded) {
+        fetch(`sections/${sectionName}.html`) // your separate HTML files
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`Failed to load ${sectionName}: ${res.status} ${res.statusText}`);
+                }
+                return res.text();
+            })
+            .then(html => {
+                sectionEl.innerHTML = html;
+                sectionEl.dataset.loaded = "true";
+
+                // Wait for next tick to ensure DOM is updated
+                setTimeout(() => {
+                    // Special initialization after content is loaded
+                    if (sectionName === 'history') initHistory();
+                    if (sectionName === 'stats') loadStats();
+                    if (sectionName === 'status') checkApiStatus();
+                    if (sectionName === 'quiz' && !window.__quizInit) {
+                        initQuiz();
+                        window.__quizInit = true;
+                    }
+                    if (sectionName === 'feedback') initFeedback(); // if needed
+                }, 0);
+            })
+            .catch(err => console.error(`Failed to load ${sectionName}:`, err));
+    } else {
+        // Section already loaded — run init if necessary
+        if (sectionName === 'history') initHistory();
+        if (sectionName === 'stats') loadStats();
+        if (sectionName === 'status') checkApiStatus();
+        if (sectionName === 'quiz' && !window.__quizInit) {
+            initQuiz();
+            window.__quizInit = true;
+        }
+        if (sectionName === "feedback" && !window._feedback) {
+          initFeedback();
+          window._feedback = true;
+        }
+    }
+
+    // Auto-close drawer on mobile after navigation
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.getElementById('sidebar');
     const backdrop = document.getElementById('backdrop');
@@ -319,52 +362,79 @@ function showSection(sectionName) {
     }
 }
 
+
 // ---------- REPLACE initQuiz() WITH THIS ----------
 function initQuiz() {
+    console.log('Initializing quiz...');
+    const quizSection = document.getElementById('quizMainSection');
+    
+    if (!quizSection) {
+        console.warn('Quiz section not found');
+        // Retry initialization once after a short delay
+        setTimeout(() => {
+            const retrySection = document.getElementById('quizMainSection');
+            if (retrySection) {
+                console.log('Quiz section found on retry, initializing...');
+                initQuizContent(retrySection);
+            } else {
+                console.error('Quiz section still not found after retry');
+            }
+        }, 100);
+        return;
+    }
+    
+    initQuizContent(quizSection);
+}
+
+function initQuizContent(quizSection) {
+
     const questions = [
-        {
-            q: 'Which of the following is a sign of a phishing email?',
-            a: [
-                { text: 'An email from a known contact asking for a file', correct: false },
-                { text: 'Grammatical errors and suspicious links', correct: true },
-                { text: 'A secure website address (https://)', correct: false },
-                { text: 'A welcome email from a trusted service', correct: false }
-            ]
-        },
-        {
-            q: 'What should you do if a message asks for your password?',
-            a: [
-                { text: 'Reply immediately with your password', correct: false },
-                { text: 'Verify the source before responding', correct: true },
-                { text: 'Ignore all emails from your company', correct: false },
-                { text: 'Click the link and change your password', correct: false }
-            ]
-        },
-        {
-            q: 'What is a phishing attack?',
-            a: [
-                { text: 'A fishing technique used in rivers', correct: false },
-                { text: 'A way to steal personal information via fake messages', correct: true },
-                { text: 'A password recovery method', correct: false },
-                { text: 'An antivirus scanning process', correct: false }
-            ]
-        }
+        { q: 'Which of the following is a sign of a phishing email?', a: [
+            { text: 'An email from a known contact asking for a file', correct: false },
+            { text: 'Grammatical errors and suspicious links', correct: true },
+            { text: 'A secure website address (https://)', correct: false },
+            { text: 'A welcome email from a trusted service', correct: false }
+        ] },
+        { q: 'What should you do if a message asks for your password?', a: [
+            { text: 'Reply immediately with your password', correct: false },
+            { text: 'Verify the source before responding', correct: true },
+            { text: 'Ignore all emails from your company', correct: false },
+            { text: 'Click the link and change your password', correct: false }
+        ] },
+        { q: 'What is a phishing attack?', a: [
+            { text: 'A fishing technique used in rivers', correct: false },
+            { text: 'A way to steal personal information via fake messages', correct: true },
+            { text: 'A password recovery method', correct: false },
+            { text: 'An antivirus scanning process', correct: false }
+        ] }
     ];
 
-    const quizProgress = document.getElementById('quizProgress');
-    const quizScoreEl = document.getElementById('quizScore');
-    const quizQuestion = document.getElementById('quizQuestion');
-    const quizAnswers = document.getElementById('quizAnswers');
-    const quizFeedback = document.getElementById('quizFeedback');
-    const quizNextBtn = document.getElementById('quizNextBtn');
-    const quizRestartBtn = document.getElementById('quizRestartBtn');
+    // Query all elements inside the lazy-loaded section
+    const quizProgress = quizSection.querySelector('#quizProgress');
+    const quizScoreEl = quizSection.querySelector('#quizScore');
+    const quizQuestion = quizSection.querySelector('#quizQuestion');
+    const quizAnswers = quizSection.querySelector('#quizAnswers');
+    const quizFeedback = quizSection.querySelector('#quizFeedback');
+    const quizNextBtn = quizSection.querySelector('#quizNextBtn');
+    const quizRestartBtn = quizSection.querySelector('#quizRestartBtn');
 
+    if (!quizProgress || !quizScoreEl || !quizQuestion || !quizAnswers) {
+        console.warn('Missing required quiz elements:', {
+            progress: !!quizProgress,
+            score: !!quizScoreEl,
+            question: !!quizQuestion,
+            answers: !!quizAnswers
+        });
+        return;
+    }
+
+    console.log('Quiz elements found, initializing game state...');
     let idx = 0;
     let score = 0;
     let autoTimer = 0;
-    const AUTO_NEXT_DELAY = 1200; // ms
+    const AUTO_NEXT_DELAY = 1200;
 
-    // load best score from localStorage
+    // Load best score from localStorage
     let bestPercent = parseInt(localStorage.getItem('surLinkBestQuiz') || '0', 10);
 
     function render() {
@@ -378,7 +448,7 @@ function initQuiz() {
         quizNextBtn.style.display = 'none';
         quizRestartBtn.style.display = 'none';
 
-        questions[idx].a.forEach((ans) => {
+        questions[idx].a.forEach(ans => {
             const btn = document.createElement('button');
             btn.className = 'quiz-answer';
             btn.textContent = ans.text;
@@ -388,15 +458,13 @@ function initQuiz() {
     }
 
     function selectAnswer(btn, correct) {
-        // disable all
         Array.from(quizAnswers.children).forEach(b => b.disabled = true);
         if (correct) {
-            score += 1;
+            score++;
             btn.classList.add('correct');
             quizFeedback.textContent = '✅ Correct!';
         } else {
             btn.classList.add('incorrect');
-            // show correct one
             const correctText = questions[idx].a.find(a => a.correct).text;
             quizFeedback.textContent = `❌ Not quite. Correct: ${correctText}`;
         }
@@ -406,7 +474,7 @@ function initQuiz() {
 
     function proceed() {
         if (idx < questions.length - 1) {
-            idx += 1;
+            idx++;
             render();
         } else {
             finishQuiz();
@@ -421,7 +489,6 @@ function initQuiz() {
         quizNextBtn.style.display = 'none';
         quizRestartBtn.style.display = 'inline-flex';
 
-        // save best percent
         if (percent > bestPercent) {
             bestPercent = percent;
             localStorage.setItem('surLinkBestQuiz', String(bestPercent));
@@ -429,7 +496,6 @@ function initQuiz() {
         }
     }
 
-    // optional helper: show best quiz stat in the stats grid
     function showBestQuizStat(best) {
         const statsGrid = document.querySelector('.stats-grid');
         if (!statsGrid) return;
@@ -444,53 +510,46 @@ function initQuiz() {
         }
     }
 
-    quizNextBtn.addEventListener('click', () => {
-        clearTimeout(autoTimer);
-        proceed();
-    });
+    quizNextBtn.addEventListener('click', () => { clearTimeout(autoTimer); proceed(); });
+    quizRestartBtn.addEventListener('click', () => { idx = 0; score = 0; quizNextBtn.style.display = 'inline-flex'; quizRestartBtn.style.display = 'none'; render(); });
 
-    quizRestartBtn.addEventListener('click', () => {
-        idx = 0;
-        score = 0;
-        quizNextBtn.style.display = 'inline-flex';
-        quizRestartBtn.style.display = 'none';
-        render();
-    });
-
-    // initial render + show best if present
     render();
     if (bestPercent > 0) showBestQuizStat(bestPercent);
 }
-// ---------- end of initQuiz replacement ----------
+
 
 // Check API status
 async function checkApiStatus() {
+    // Find elements dynamically
+    const statusSection = document.getElementById('statusMainSection');
+    if (!statusSection) return; // section not loaded yet
+
+    const statusIndicator = statusSection.querySelector('.status-indicator');
+    const statusText = statusSection.querySelector('.status-text');
+    if (!statusIndicator || !statusText) return;
+
     try {
         statusIndicator.className = "status-indicator checking";
         statusText.textContent = "Checking...";
-        
+
         // Check main classification API
         const response = await fetch(`${apiUrl}/health`, {
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            headers: { 'Content-Type': 'application/json' }
         });
-        
+
         // Check explainer API
         let explainerStatus = "Unknown";
         try {
             const expResponse = await fetch(`${explainerUrl}/health`, {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+                headers: { 'Content-Type': 'application/json' }
             });
             explainerStatus = expResponse.ok ? "Available" : "Unavailable";
         } catch (error) {
             explainerStatus = "Unavailable";
         }
-        
+
         if (response.ok) {
             statusIndicator.className = "status-indicator online";
             statusText.textContent = `Online (Explainer: ${explainerStatus})`;
@@ -722,12 +781,19 @@ function formatResult(data) {
 
 // Save to history
 function saveToHistory(message, result) {
+    // Find the history list in case it's lazy-loaded
+    const historySection = document.getElementById('historyMainSection');
+    if (!historySection) return; // safety check
+
+    const historyList = historySection.querySelector('#historyList');
+    if (!historyList) return; // section not loaded yet
+
     const isPhishing = result.toLowerCase().includes("phishing");
     const historyItem = document.createElement("div");
     historyItem.className = `history-item ${isPhishing ? 'phishing' : 'safe'}`;
     historyItem.setAttribute('role', 'listitem');
     const truncatedMessage = message.length > 50 ? message.substring(0, 50) + "..." : message;
-    
+
     historyItem.innerHTML = `
         <div style="font-weight: 500; margin-bottom: 4px;">
             ${isPhishing ? "🚨 Phishing" : "✅ Safe"}
@@ -739,16 +805,16 @@ function saveToHistory(message, result) {
             ${new Date().toLocaleTimeString()}
         </div>
     `;
-    
+
     // Remove empty history message if it exists
     const emptyHistory = historyList.querySelector('.empty-history');
     if (emptyHistory) {
         emptyHistory.remove();
     }
-    
+
     // Add to top of history
     historyList.insertBefore(historyItem, historyList.firstChild);
-    
+
     // Keep only last 10 items
     const items = historyList.querySelectorAll('.history-item');
     if (items.length > 10) {
@@ -756,31 +822,36 @@ function saveToHistory(message, result) {
     }
 }
 
+
 // Update statistics
 function updateStats(result) {
     totalScans++;
-    
+
     if (result.toLowerCase().includes("phishing")) {
         phishingScans++;
     } else {
         safeScans++;
     }
-    
-    totalScansEl.textContent = totalScans;
-    phishingScansEl.textContent = phishingScans;
-    safeScansEl.textContent = safeScans;
-    
+
+    // Find the stats elements dynamically
+    const statsSection = document.getElementById('statsMainSection');
+    if (!statsSection) return; // section not loaded yet
+
+    const totalScansEl = statsSection.querySelector('#totalScans');
+    const phishingScansEl = statsSection.querySelector('#phishingScans');
+    const safeScansEl = statsSection.querySelector('#safeScans');
+
+    if (totalScansEl) totalScansEl.textContent = totalScans;
+    if (phishingScansEl) phishingScansEl.textContent = phishingScans;
+    if (safeScansEl) safeScansEl.textContent = safeScans;
+
     // Save to localStorage
     saveStats();
 }
 
 // Save stats to localStorage
 function saveStats() {
-    const stats = {
-        totalScans,
-        phishingScans,
-        safeScans
-    };
+    const stats = { totalScans, phishingScans, safeScans };
     localStorage.setItem('surLinkStats', JSON.stringify(stats));
 }
 
@@ -792,12 +863,21 @@ function loadStats() {
         totalScans = stats.totalScans || 0;
         phishingScans = stats.phishingScans || 0;
         safeScans = stats.safeScans || 0;
-        
-        totalScansEl.textContent = totalScans;
-        phishingScansEl.textContent = phishingScans;
-        safeScansEl.textContent = safeScans;
+
+        // Update elements if they exist (may not be loaded yet)
+        const statsSection = document.getElementById('statsMainSection');
+        if (statsSection) {
+            const totalScansEl = statsSection.querySelector('#totalScans');
+            const phishingScansEl = statsSection.querySelector('#phishingScans');
+            const safeScansEl = statsSection.querySelector('#safeScans');
+
+            if (totalScansEl) totalScansEl.textContent = totalScans;
+            if (phishingScansEl) phishingScansEl.textContent = phishingScans;
+            if (safeScansEl) safeScansEl.textContent = safeScans;
+        }
     }
 }
+
 
 // Update API URL (this will be set when you deploy to Hugging Face Spaces)
 function updateApiUrl(url) {
@@ -901,33 +981,86 @@ function loadTheme() {
     }
 }
 
-document.getElementById("submitFeedback").addEventListener("click", () => {
-  const type = document.getElementById("feedbackType").value;
-  const message = document.getElementById("feedbackMessage").value.trim();
+// === Feedback Function ===
+function initFeedback() {
+  // Get all required elements
+  const submitBtn = document.getElementById("submitFeedback");
+  const clearBtn = document.getElementById("clearFeedback");
+  const messageEl = document.getElementById("feedbackMessage");
   const status = document.getElementById("feedbackStatus");
+  const typeEl = document.getElementById("feedbackType");
 
-  if (!message) {
-    status.textContent = "⚠️ Please enter your feedback before submitting.";
-    status.style.color = "orange";
-    status.classList.add("show");
+  if (!submitBtn || !clearBtn || !messageEl || !status || !typeEl) {
+    console.error("Required feedback elements not found");
     return;
   }
 
-  console.log("📩 Feedback submitted:", { type, message });
+  // Clean up any existing event listeners by replacing elements
+  const newSubmitBtn = submitBtn.cloneNode(true);
+  submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
+  const newClearBtn = clearBtn.cloneNode(true);
+  clearBtn.parentNode.replaceChild(newClearBtn, clearBtn);
 
-  status.textContent = "✅ Thank you! Your feedback has been sent.";
-  status.style.color = "green";
-  status.classList.add("show");
+  let isSubmitting = false; // Flag to prevent double submission
 
-  // Clear form after submission
-  document.getElementById("feedbackMessage").value = "";
-  setTimeout(() => status.classList.remove("show"), 3000);
-});
+  // Handle submission
+  newSubmitBtn.addEventListener("click", (event) => {
+    event.preventDefault();
 
-document.getElementById("clearFeedback").addEventListener("click", () => {
-  document.getElementById("feedbackMessage").value = "";
-  document.getElementById("feedbackStatus").classList.remove("show");
-});
+    if (isSubmitting) {
+      console.log("Submission already in progress");
+      return;
+    }
+
+    const type = typeEl.value;
+    const message = messageEl.value.trim();
+
+    // Validate message
+    if (!message || message.length < 2) {
+      console.log("Validation failed: message is empty or too short");
+      status.textContent =
+        "⚠️ Please enter meaningful feedback before submitting.";
+      status.style.color = "orange";
+      status.classList.add("show");
+      messageEl.focus();
+      return;
+    }
+
+    // Set submission flag and disable controls
+    isSubmitting = true;
+    newSubmitBtn.disabled = true;
+    messageEl.disabled = true;
+
+    // Show success
+    status.textContent = "✅ Thank you! Your feedback has been sent.";
+    status.style.color = "green";
+    status.classList.add("show");
+
+    // Clear the message
+    messageEl.value = "";
+
+    // Reset form after delay
+    setTimeout(() => {
+      isSubmitting = false;
+      messageEl.disabled = false;
+      newSubmitBtn.disabled = false;
+      status.textContent = "";
+      status.classList.remove("show");
+    }, 3000);
+  });
+
+  // Handle clear button
+  newClearBtn.addEventListener("click", () => {
+    if (!isSubmitting) {
+      messageEl.value = "";
+      status.textContent = "";
+      status.classList.remove("show");
+      messageEl.focus();
+    }
+  });
+}
+
+
 
 // === Image picker OCR ===
 function setupImagePicker() {

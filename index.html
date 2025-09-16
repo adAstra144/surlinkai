@@ -35,7 +35,11 @@
 </div>
 <body>
   <div class="mobile-header" role="banner">
-    <button id="menuToggle" class="hamburger" aria-label="Toggle menu" aria-expanded="false" aria-controls="sidebar">☰</button>
+    <button id="menuToggle" class="hamburger" aria-label="Toggle menu" aria-expanded="false" aria-controls="sidebar">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
     <div class="mobile-brand">
       <span id="header-icon" class="brand-logo"><img src="assets/logo.avif" alt="SûrLink logo" ></span>
       <span class="brand-title" data-i18n="title">SûrLink</span>
@@ -180,98 +184,23 @@
       </div>
 
       <!-- History (Main) -->
-      <div id="historyMainSection" class="content-section">
-        <div class="content-scroll">
-          <h3 style="margin-bottom:12px;" data-i18n="recent_scans">Recent Scans</h3>
-          <div class="history-list" id="historyList">
-            <p class="empty-history" data-i18n="no_scans">No scans yet</p>
-          </div>
-        </div>
+      <div id="historyMainSection" class="content-section" data-lazy="true">
       </div>
 
       <!-- Stats (Main) -->
-      <div id="statsMainSection" class="content-section">
-        <div class="content-scroll">
-          <h3 style="margin-bottom:12px;" data-i18n="scan_statistics">Scan Statistics</h3>
-          <div class="stats-grid">
-            <div class="stat-item">
-              <span class="stat-number" id="totalScans">0</span>
-              <span class="stat-label" data-i18n="total_scans">Total Scans</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-number" id="phishingScans">0</span>
-              <span class="stat-label" data-i18n="phishing_detected">Phishing Detected</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-number" id="safeScans">0</span>
-              <span class="stat-label" data-i18n="safe_messages">Safe Messages</span>
-              
-            </div>
-          </div>
-          <div class="chart-container">
-  <canvas id="scanChart"></canvas>
-</div>
-        </div>
+      <div id="statsMainSection" class="content-section" data-lazy="true">
       </div>
 
       <!-- Status (Main) -->
-      <div id="statusMainSection" class="content-section">
-        <div class="content-scroll">
-          <h3 style="margin-bottom:12px;" data-i18n="api_status">API Status</h3>
-          <div class="api-status" id="apiStatus">
-            <span class="status-indicator" id="statusIndicator" role="status" aria-live="polite">●</span>
-            <span class="status-text" id="statusText" data-i18n="checking">Checking...</span>
-          </div>
-        </div>
+      <div id="statusMainSection" class="content-section" data-lazy="true">
       </div>
 
       <!-- Quiz (Main) -->
-      <div id="quizMainSection" class="content-section">
-        <div class="content-scroll">
-          <h3 style="margin-bottom:12px;" data-i18n="quiz">Phishing Awareness Quiz</h3>
-          <div id="quizContainer" class="quiz-card">
-            <div class="quiz-top">
-              <div id="quizProgress" class="quiz-progress" aria-live="polite"></div>
-              <div id="quizScore" class="quiz-score"></div>
-            </div>
-            <div id="quizQuestion" class="quiz-question"></div>
-            <div id="quizAnswers" class="quiz-answers"></div>
-            <div id="quizFeedback" class="quiz-feedback" aria-live="polite"></div>
-            <div class="quiz-actions">
-              <button id="quizNextBtn" class="scan-btn" disabled>Next</button>
-              <button id="quizRestartBtn" class="scan-btn outline" style="display:none;">Restart</button>
-            </div>
-          </div>
-        </div>
+      <div id="quizMainSection" class="content-section" data-lazy="true">
       </div>
+
    <!-- Feedback (Main) -->
-<div id="feedbackMainSection" class="content-section">
-  <div class="content-scroll">
-    <h3 style="margin-bottom:12px;" data-i18n="feedback_title">We value your feedback</h3>
-    <div class="feedback-card">
-      <label for="feedbackType" data-i18n="feedback_type">Feedback Type</label>
-      <select id="feedbackType" aria-label="Select feedback type">
-        <option value="suggestion" data-i18n="suggestion">💡 Suggestion</option>
-        <option value="bug" data-i18n="bug">🐞 Bug Report</option>
-        <option value="question" data-i18n="question">❓ Question</option>
-      </select>
-
-      <label for="feedbackMessage" data-i18n="your_feedback">Your Feedback</label>
-      <textarea 
-        id="feedbackMessage" 
-        placeholder="Type your feedback here..."
-        aria-label="Feedback message"
-        data-i18n-placeholder="feedback_placeholder"
-      ></textarea>
-
-      <div class="feedback-actions">
-        <button id="submitFeedback" class="scan-btn" data-i18n="submit">Submit</button>
-        <button id="clearFeedback" class="scan-btn outline" data-i18n="clear">Clear</button>
-      </div>
-
-      <div id="feedbackStatus" class="feedback-status" aria-live="polite"></div>
-    </div>
-  </div>
+<div id="feedbackMainSection" class="content-section" data-lazy="true">
 </div>
         
     </main>

@@ -1,0 +1,26 @@
+<div class="content-scroll">
+<h3 style="margin-bottom:12px;" data-i18n="feedback_title">We value your feedback</h3>
+<div class="feedback-card">
+    <label for="feedbackType" data-i18n="feedback_type">Feedback Type</label>
+    <select id="feedbackType" aria-label="Select feedback type">
+    <option value="suggestion" data-i18n="suggestion">💡 Suggestion</option>
+    <option value="bug" data-i18n="bug">🐞 Bug Report</option>
+    <option value="question" data-i18n="question">❓ Question</option>
+    </select>
+
+    <label for="feedbackMessage" data-i18n="your_feedback">Your Feedback</label>
+    <textarea 
+    id="feedbackMessage" 
+    placeholder="Type your feedback here..."
+    aria-label="Feedback message"
+    data-i18n-placeholder="feedback_placeholder"
+    ></textarea>
+
+    <div class="feedback-actions">
+    <button id="submitFeedback" class="scan-btn" data-i18n="submit">Submit</button>
+    <button id="clearFeedback" class="scan-btn outline" data-i18n="clear">Clear</button>
+    </div>
+
+    <div id="feedbackStatus" class="feedback-status" aria-live="polite"></div>
+</div>
+</div>
