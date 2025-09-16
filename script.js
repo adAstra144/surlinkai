@@ -865,33 +865,42 @@ setInterval(checkApiStatus, 30000);
 function toggleTheme() {
     const body = document.body;
     const themeToggle = document.getElementById('themeToggle');
-    const isDark = body.classList.contains('light-theme');
-    
+    const themeLabel = document.querySelector('.theme-label');
+    const isDark = body.classList.contains('light-theme'); // currently light?
+
     if (isDark) {
         // Switch to dark theme
         body.classList.remove('light-theme');
         localStorage.setItem('surLinkTheme', 'dark');
         themeToggle.checked = false;
+        if (themeLabel) themeLabel.textContent = '🌙 Dark Theme';
     } else {
         // Switch to light theme
         body.classList.add('light-theme');
         localStorage.setItem('surLinkTheme', 'light');
         themeToggle.checked = true;
+        if (themeLabel) themeLabel.textContent = '☀️ Light Theme';
     }
 }
 
 // Load saved theme on page load
 function loadTheme() {
     const savedTheme = localStorage.getItem('surLinkTheme');
+    const body = document.body;
     const themeToggle = document.getElementById('themeToggle');
-    
+    const themeLabel = document.querySelector('.theme-label');
+
     if (savedTheme === 'light') {
-        document.body.classList.add('light-theme');
-        if (themeToggle) {
-            themeToggle.checked = true;
-        }
+        body.classList.add('light-theme');
+        if (themeToggle) themeToggle.checked = true;
+        if (themeLabel) themeLabel.textContent = '☀️ Light Theme';
+    } else {
+        body.classList.remove('light-theme');
+        if (themeToggle) themeToggle.checked = false;
+        if (themeLabel) themeLabel.textContent = '🌙 Dark Theme';
     }
 }
+
 document.getElementById("submitFeedback").addEventListener("click", () => {
   const type = document.getElementById("feedbackType").value;
   const message = document.getElementById("feedbackMessage").value.trim();

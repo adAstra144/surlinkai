@@ -23,34 +23,13 @@ window.startOnboarding = function () {
     <div class="onb-dim"></div>
 
     <div class="onb-welcome">
-      <div class="head">👋 Welcome to SûrLink</div>
+      <div class="head">Welcome to SûrLink 👋</div>
       <div class="body">
         <p>Would you like a quick guided tour of the phishing scanner?</p>
       </div>
       <div class="cta">
         <button class="onb-btn js-no">No, I'm familiar</button>
         <button class="onb-btn primary js-yes">Yes, I'm new here</button>
-      </div>
-    </div>
-
-    <div class="onb-disclaimer" style="display:none;">
-      <div class="head">⚠️ Important Safety Notice</div>
-      <div class="body">
-        <p>Our scanner uses AI to detect phishing messages. While it's usually accurate, it may sometimes give wrong results. Always double-check who sent the message, and do not click on links or provide personal info if you are unsure.</p>
-      </div>
-      <div class="cta">
-        <button class="onb-btn js-back">Back</button>
-        <button class="onb-btn primary js-next">Next</button>
-      </div>
-    </div>
-
-    <div class="onb-finished" style="display:none;">
-      <div class="head">🎉 All Set!</div>
-      <div class="body">
-        <p>Thank you for joining us — enjoy using SûrLink!</p>
-      </div>
-      <div class="cta">
-        <button class="onb-btn primary js-next">Start Using SûrLink</button>
       </div>
     </div>
 
@@ -72,17 +51,15 @@ window.startOnboarding = function () {
 
   // Elements
   const welcome = q('.onb-welcome', root);
-  const disclaimer = q('.onb-disclaimer', root);
-  const finished = q('.onb-finished', root);
   const bar = q('.onb-bar', root);
   const titleEl = q('#onb-title', root);
   const descEl = q('#onb-desc', root);
   const btnYes = q('.js-yes', root);
   const btnNo = q('.js-no', root);
   const btnSkip = q('.js-skip', root);
-  // Update button selectors to get all instances
-  const btnBackAll = root.querySelectorAll('.js-back');
-  const btnNextAll = root.querySelectorAll('.js-next');
+  const btnBack = q('.js-back', root);
+  const btnNext = q('.js-next', root);
+  const progressEl = q('#onb-progress', root);
 
   const sidebar = document.getElementById('sidebar');
   const backdrop = document.getElementById('backdrop');
@@ -174,20 +151,19 @@ window.startOnboarding = function () {
   animateDim();
 
   const steps = [
-    { title: 'Important Disclaimer', desc: 'Our scanner uses AI to detect phishing messages. While it\'s usually accurate, it may sometimes give wrong results. Always double-check messages yourself and do not click on links or provide personal info if you are unsure.', section: null, mode: 'disclaimer' },
-    { title: '💬 Chat Scanner', desc: 'Open the Chat Scanner from the sidebar.', section: 'chat', mode: 'btn' },
-    { title: '💬 Chat Area', desc: 'Scan suspicious messages here.', section: 'chat', mode: 'sec' },
-    { title: '📁 History', desc: 'Access your previous scans.', section: 'history', mode: 'btn' },
-    { title: '📁 History Area', desc: 'View logs of past scans.', section: 'history', mode: 'sec' },
-    { title: '📊 Statistics', desc: 'Check phishing statistics.', section: 'stats', mode: 'btn' },
-    { title: '📊 Statistics Area', desc: 'Charts and trends appear here.', section: 'stats', mode: 'sec' },
-    { title: '🧠 Quiz', desc: 'Take a phishing awareness quiz.', section: 'quiz', mode: 'btn' },
-    { title: '🧠 Quiz Area', desc: 'Practice spotting phishing attempts.', section: 'quiz', mode: 'sec' },
-    { title: '🤖 API Status', desc: 'Check the current status of SûrLink services.', section: 'status', mode: 'btn' },
-    { title: '🤖 API Status Area', desc: 'See live API status updates here.', section: 'status', mode: 'sec' },
-    { title: '📩 Feedback', desc: 'Send us your thoughts.', section: 'feedback', mode: 'btn' },
-    { title: '📩 Feedback Area', desc: 'Share suggestions here.', section: 'feedback', mode: 'sec' },
-    { title: '🎉 All Set!', desc: 'Thank you for joining us — enjoy using SûrLink!', section: null, mode: 'end' }
+    { title: 'Chat Scanner', desc: 'Open the Chat Scanner from the sidebar.', section: 'chat', mode: 'btn' },
+    { title: 'Chat Area', desc: 'Scan suspicious messages here.', section: 'chat', mode: 'sec' },
+    { title: 'History', desc: 'Access your previous scans.', section: 'history', mode: 'btn' },
+    { title: 'History Area', desc: 'View logs of past scans.', section: 'history', mode: 'sec' },
+    { title: 'Statistics', desc: 'Check phishing statistics.', section: 'stats', mode: 'btn' },
+    { title: 'Statistics Area', desc: 'Charts and trends appear here.', section: 'stats', mode: 'sec' },
+    { title: 'Quiz', desc: 'Take a phishing awareness quiz.', section: 'quiz', mode: 'btn' },
+    { title: 'Quiz Area', desc: 'Practice spotting phishing attempts.', section: 'quiz', mode: 'sec' },
+    { title: 'API Status', desc: 'Check the current status of SûrLink services.', section: 'status', mode: 'btn' },
+    { title: 'API Status Area', desc: 'See live API status updates here.', section: 'status', mode: 'sec' },
+    { title: 'Feedback', desc: 'Send us your thoughts.', section: 'feedback', mode: 'btn' },
+    { title: 'Feedback Area', desc: 'Share suggestions here.', section: 'feedback', mode: 'sec' },
+    { title: 'All Set!', desc: '🎉 Thank you for joining us — enjoy using SûrLink!', section: null, mode: 'end' }
   ];
 
   let index = -1;
@@ -199,32 +175,14 @@ window.startOnboarding = function () {
 
     clearHighlights();
 
-    // Hide all containers first
-    welcome.style.display = 'none';
-    disclaimer.style.display = 'none';
-    finished.style.display = 'none';
-    bar.style.display = 'none';
-
-    if (step.mode === 'disclaimer') {
-        disclaimer.style.display = 'flex';
-    } else if (step.mode === 'end') {
-        finished.style.display = 'flex';
-    } else {
-        bar.style.display = 'flex';
-        // Reset styles
-        titleEl.style.color = '';
-        descEl.style.fontSize = '';
-        descEl.style.lineHeight = '';
-        
-        if (step.mode === 'btn') {
-            openSidebar();
-            await WAIT(150);
-            highlightNav(step.section);
-        } else if (step.mode === 'sec') {
-            if (typeof window.showSection === 'function') window.showSection(step.section);
-            await WAIT(250);
-            highlightSection(step.section);
-        }
+    if (step.mode === 'btn') {
+      openSidebar();
+      await WAIT(150);
+      highlightNav(step.section);
+    } else if (step.mode === 'sec') {
+      if (typeof window.showSection === 'function') window.showSection(step.section);
+      await WAIT(250);
+      highlightSection(step.section);
     }
 
     // Title + Desc
@@ -233,7 +191,7 @@ window.startOnboarding = function () {
 
     // Progress bar
     if (progressEl) {
-        progressEl.style.width = ((i + 1) / steps.length * 100) + "%";
+      progressEl.style.width = ((i + 1) / steps.length * 100) + "%";
     }
 
     // Buttons
@@ -243,6 +201,7 @@ window.startOnboarding = function () {
 
   function start() {
     welcome.style.display = 'none';
+    bar.style.display = 'flex';
     showStep(0);
   }
 
@@ -266,12 +225,6 @@ function finish() {
   btnYes.onclick = start;
   btnNo.onclick = finish;
   btnSkip.onclick = finish;
-  // Bind all next buttons
-  btnNextAll.forEach(btn => {
-    btn.onclick = () => index >= steps.length - 1 ? finish() : showStep(index + 1);
-  });
-  // Bind all back buttons
-  btnBackAll.forEach(btn => {
-    btn.onclick = () => showStep(index - 1);
-  });
+  btnNext.onclick = () => index >= steps.length - 1 ? finish() : showStep(index + 1);
+  btnBack.onclick = () => showStep(index - 1);
 };
