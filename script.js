@@ -322,7 +322,6 @@ function showSection(sectionName) {
                 // Wait for next tick to ensure DOM is updated
                 setTimeout(() => {
                     // Special initialization after content is loaded
-                    if (sectionName === 'history') initHistory();
                     if (sectionName === 'stats') loadStats();
                     if (sectionName === 'status') checkApiStatus();
                     if (sectionName === 'quiz' && !window.__quizInit) {
@@ -335,7 +334,6 @@ function showSection(sectionName) {
             .catch(err => console.error(`Failed to load ${sectionName}:`, err));
     } else {
         // Section already loaded — run init if necessary
-        if (sectionName === 'history') initHistory();
         if (sectionName === 'stats') loadStats();
         if (sectionName === 'status') checkApiStatus();
         if (sectionName === 'quiz' && !window.__quizInit) {
