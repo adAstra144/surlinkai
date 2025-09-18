@@ -41,6 +41,54 @@
   /* Ensure backdrop is hidden on desktop */
   .backdrop { display: none !important; }
 }
+/* AI Message Styles */
+#ai-message {
+  margin-top: 12px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  text-align: left;
+  color: #fff;
+}
+
+body.light-theme #ai-message {
+  color: #1a1a1a;
+}
+
+#ai-explanation {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid rgba(99,102,241,0.3);
+  border-radius: 10px;
+  background: rgba(30,41,59,0.6);
+  color: #e2e8f0;
+}
+
+body.light-theme #ai-explanation {
+  background: rgba(241,245,249,0.9);
+  color: #1a1a1a;
+}
+
+#ai-explanation-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #a5b4fc;
+}
+
+body.light-theme #ai-explanation-title {
+  color: #4f46e5;
+}
+
+#ai-explanation-content {
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.explanation-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* Reset and Base Styles */
 :root { --keyboard-offset: 0px; }
 /* iOS safe areas */
@@ -235,7 +283,6 @@ body.no-scroll { overflow: hidden; }
   overflow: hidden;
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: none; /* avoid stacking context that can block sidebar */
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   position: relative;
   z-index: auto; /* do not create a stacking context; allow sidebar to overlay backdrop */
   margin-top: 64px; /* push below header with a bit more space */
@@ -370,7 +417,6 @@ body.no-scroll { overflow: hidden; }
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%);
   border-color: rgba(99, 102, 241, 0.6);
   color: #f1f5f9;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .nav-icon {
@@ -509,7 +555,6 @@ body.no-scroll { overflow: hidden; }
   width: 100%;
   max-width: 1100px;
   margin: 0 auto;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
 }
 .quiz-top { display:flex; justify-content: space-between; align-items:center; margin-bottom: 12px; }
 .quiz-progress { color:#cbd5e1; font-weight:600; }
@@ -540,7 +585,6 @@ body.no-scroll { overflow: hidden; }
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -673,7 +717,6 @@ body.light-theme .quiz-answer:hover { background: rgba(99,102,241,0.1); }
   background: rgba(30, 41, 59, 0.8);
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(99, 102, 241, 0.2);
   backdrop-filter: blur(10px);
 }
@@ -753,7 +796,6 @@ body.light-theme .quiz-answer:hover { background: rgba(99,102,241,0.1); }
   border-radius: 20px;
   position: relative;
   word-wrap: break-word;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
 
 .message-bubble.user .bubble-content {
@@ -868,7 +910,6 @@ body.light-theme .quiz-answer:hover { background: rgba(99,102,241,0.1); }
   outline: none;
   border-color: #6366f1;
   background: rgba(30, 41, 59, 0.95);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
 #messageInput::placeholder {
@@ -891,7 +932,6 @@ body.light-theme .quiz-answer:hover { background: rgba(99,102,241,0.1); }
   gap: 8px;
   min-width: 140px;
   height: 44px;
-  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
   position: relative;
   overflow: hidden;
 }
@@ -913,7 +953,6 @@ body.light-theme .quiz-answer:hover { background: rgba(99,102,241,0.1); }
 
 .scan-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 35px rgba(99, 102, 241, 0.5);
 }
 
 .scan-btn:active {
@@ -965,7 +1004,6 @@ body.light-theme .quiz-answer:hover { background: rgba(99,102,241,0.1); }
 
 .stat-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.3);
   border-color: rgba(99, 102, 241, 0.4);
 }
 
@@ -1115,7 +1153,6 @@ body.light-theme .quiz-answer:hover { background: rgba(99,102,241,0.1); }
   align-items: center;
   gap: 8px;
   font-weight: 600;
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
 }
 
 .camera-actions #flipCamera:hover,
@@ -1134,7 +1171,6 @@ body.light-theme .camera-actions #flipCamera,
 body.light-theme .camera-actions .flip-btn {
   color: #1e293b;
   border-color: rgba(71, 85, 105, 0.4);
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
 }
 
 body.light-theme .camera-actions #flipCamera:hover,
@@ -1831,7 +1867,6 @@ body.light-theme .brand-title {
 body.light-theme .app-container {
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: none; /* avoid overlay/stacking issues on light theme */
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 }
 
 body.light-theme .sidebar {
@@ -2009,7 +2044,7 @@ body.light-theme .empty-history {
 body.light-theme #ai-message {
   color: #000000 !important;
 }
- 
+
  /* Space between Account and Appearance sections */
 .account-section + .theme-toggle-section {
   margin-top: 16px;
@@ -2041,7 +2076,6 @@ body.light-theme #ai-message {
   border-radius: 14px;
   padding: 20px 22px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
 }
 .modal-content h3 {
   margin: 0 0 12px 0;
@@ -2108,8 +2142,6 @@ body.light-theme #ai-message {
   inset: -6px;
   border-radius: 12px;
   border: 2px solid #8b5cf6;
-  box-shadow: 0 0 12px rgba(139,92,246,0.9),
-              0 0 28px rgba(99,102,241,0.6);
   pointer-events: none;
   animation: pulse 1.6s ease-in-out infinite;
 }
@@ -2128,7 +2160,6 @@ body.light-theme #ai-message {
   border-radius: 16px;
   background: #1e2533;
   border: 1px solid rgba(139,92,246,0.3);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.65);
   color: #f9fafb;
   animation: fadeScale 0.35s ease forwards;
   display: flex;
@@ -2168,7 +2199,6 @@ body.light-theme #ai-message {
   border-radius: 14px;
   background: #1e2533;
   border: 1px solid rgba(139,92,246,0.25);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.55);
   display: flex;
   flex-direction: column;
   animation: slideUp 0.35s ease forwards;
@@ -2230,11 +2260,9 @@ body.light-theme #ai-message {
 .onb-btn.primary {
   background: linear-gradient(135deg,#6366f1,#8b5cf6);
   color: white;
-  box-shadow: 0 4px 10px rgba(139,92,246,0.35);
 }
 .onb-btn.primary:hover {
   background: linear-gradient(135deg,#7c3aed,#4f46e5);
-  box-shadow: 0 4px 12px rgba(139,92,246,0.45);
 }
 
 /* ---------- Animations ---------- */
@@ -2291,8 +2319,6 @@ body.light-theme #ai-message {
   inset: -6px;
   border-radius: 12px;
   border: 2px solid #8b5cf6;
-  box-shadow: 0 0 12px rgba(139,92,246,0.8),
-              0 0 28px rgba(99,102,241,0.6);
   pointer-events: none;
   animation: pulse 1.6s ease-in-out infinite;
 }
@@ -2308,7 +2334,6 @@ body.light-theme #ai-message {
   border-radius: 16px;
   max-width: 480px;
   width: calc(100% - 32px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.65);
   color: var(--modal-text, #f9fafb);
   z-index: 9999;
   animation: fadeScale 0.35s ease-out;
@@ -2348,7 +2373,6 @@ body.light-theme #ai-message {
   border-radius: 14px;
   width: calc(100% - 32px);
   max-width: 900px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.55);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2395,11 +2419,9 @@ body.light-theme #ai-message {
 .onboard-btn.primary {
   background: linear-gradient(135deg,#6366f1,#8b5cf6);
   color: #fff;
-  box-shadow: 0 4px 10px rgba(139,92,246,0.35);
 }
 .onboard-btn.primary:hover {
   background: linear-gradient(135deg,#7c3aed,#4f46e5);
-  box-shadow: 0 4px 12px rgba(139,92,246,0.45);
 }
 
 /* ---------- Animations ---------- */
@@ -2505,8 +2527,7 @@ body.light-theme .icon-btn img {
   gap: 10px;
   padding: 10px;
   border-radius: 12px;
-  background: var(--input-bg, rgba(255, 255, 255, 0.05));
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  background: var(--input-bg, #1e293b);
   border: 1px solid rgba(99, 102, 241, 0.2);
 }
 
@@ -2517,13 +2538,12 @@ body.light-theme .input-area {
 }
 
 body.dark-theme .input-area {
-  background: rgba(30, 34, 42, 0.9);
+  background: rgb(64, 64, 64);
   border: 1px solid rgba(99, 102, 241, 0.2);
 }
 .scan-btn {
   background: rgba(99, 102, 241, 0.15);
   border: 1px solid rgba(139, 92, 246, 0.4);
-  box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
 }
 
 .api-status {
@@ -2539,14 +2559,12 @@ body.light-theme .hamburger {
 .image-input-wrapper label.icon-btn {
   background: rgba(99, 102, 241, 0.15);
   border: 1px solid rgba(139, 92, 246, 0.4);
-  box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
   border-radius: 12px;
   padding: 10px 14px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: box-shadow 0.3s ease;
 }
 
 /* === Image Options Button (same glow style as hamburger) === */
@@ -2561,8 +2579,6 @@ body.light-theme .hamburger {
   width: 44px;   /* keep consistent square button */
   height: 44px;
   cursor: pointer;
-  transition: box-shadow 0.3s ease, transform 0.2s ease;
-  box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
 }
 
 /* Light theme */
@@ -2582,7 +2598,6 @@ body.light-theme #imageOptionsBtn {
   cursor: pointer;
   transition: box-shadow 0.3s ease, transform 0.2s ease;
   color: #fff; /* keeps the ☰ lines clean without glow */
-  box-shadow: 0 0 12px rgba(99, 102, 241, 0.6); /* glow around box */
   text-shadow: none; /* ensure ☰ itself doesn't glow */
 }
 
@@ -2608,7 +2623,6 @@ body.dark-theme .hamburger {
   padding: 8px;
   margin-bottom: 8px;
   backdrop-filter: blur(20px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
   z-index: 1000;
   min-width: 160px;
   animation: fadeInDown 0.2s ease-out;
@@ -2682,7 +2696,6 @@ body.dark-theme .hamburger {
 body.light-theme .image-options-dropdown {
   background: rgba(248, 250, 252, 0.95);
   border-color: rgba(99, 102, 241, 0.2);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 body.light-theme .dropdown-option {

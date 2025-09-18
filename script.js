@@ -654,20 +654,20 @@ function displayScanResult(classification, confidence, explanation = null) {
         <div style="margin-top: 8px; font-size: 0.9rem; opacity: 0.8;">
             Confidence: <strong>${confidence}</strong>
         </div>
-        <div id="ai-message" style="margin-top: 12px; font-size: 0.95rem; color: #fff; line-height:1.6; text-align: left;">
+        <div id="ai-message">
             ${advice}
         </div>`;
     
     if (explanation !== null) {
         content += `
-        <div style="margin-top: 12px; padding: 12px; border: 1px solid rgba(99,102,241,0.3); border-radius: 10px; background: rgba(30,41,59,0.6); color: #e2e8f0;">
-            <div style="font-weight:600; margin-bottom:6px; color:#a5b4fc;">${translations[lang].why_decision}</div>
-            <div style="white-space: pre-wrap; line-height:1.5;">${explanation}</div>
+        <div id="ai-explanation">
+            <div id="ai-explanation-title">${translations[lang].why_decision}</div>
+            <div id="ai-explanation-content">${explanation}</div>
         </div>`;
     } else {
         content += `
-        <div class="explanation-placeholder" style="margin-top: 12px; padding: 12px; border: 1px solid rgba(99,102,241,0.3); border-radius: 10px; background: rgba(30,41,59,0.6); color: #e2e8f0;">
-            <div style="display: flex; align-items: center; gap: 8px;">
+        <div id="ai-explanation" class="explanation-placeholder">
+            <div class="explanation-loading">
                 <div class="typing-dots">
                     <span></span><span></span><span></span>
                 </div>
@@ -765,13 +765,13 @@ function formatResult(data) {
         <div style="margin-top: 8px; font-size: 0.9rem; opacity: 0.8;">
             Confidence: <strong>${confidence}</strong>
         </div>
-        <div id="ai-message" style="margin-top: 12px; font-size: 0.95rem; color: #fff; line-height:1.6; text-align: left;">
+        <div id="ai-message">
             ${advice}
         </div>
         ${explanation ? `
-        <div style="margin-top: 12px; padding: 12px; border: 1px solid rgba(99,102,241,0.3); border-radius: 10px; background: rgba(30,41,59,0.6); color: #e2e8f0;">
-            <div style="font-weight:600; margin-bottom:6px; color:#a5b4fc;">${translations[lang].why_decision}</div>
-            <div style="white-space: pre-wrap; line-height:1.5;">${explanation.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+        <div id="ai-explanation">
+            <div id="ai-explanation-title">${translations[lang].why_decision}</div>
+            <div id="ai-explanation-content">${explanation.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
         </div>` : ''}
     `;
 }
@@ -1587,13 +1587,13 @@ function applyTranslations(lang) {
         <div style="margin-top: 8px; font-size: 0.9rem; opacity: 0.8;">
             Confidence: <strong>${confidence}</strong>
         </div>
-        <div id="ai-message" style="margin-top: 12px; font-size: 0.95rem; color: #fff; line-height:1.6; text-align: left;">
+        <div id="ai-message">
             ${advice}
         </div>
         ${explanation ? `
-        <div style="margin-top: 12px; padding: 12px; border: 1px solid rgba(99,102,241,0.3); border-radius: 10px; background: rgba(30,41,59,0.6); color: #e2e8f0;">
-            <div style="font-weight:600; margin-bottom:6px; color:#a5b4fc;">${translations[lang].why_decision}</div>
-            <div style="white-space: pre-wrap; line-height:1.5;">${explanation}</div>
+        <div id="ai-explanation">
+            <div id="ai-explanation-title">${translations[lang].why_decision}</div>
+            <div id="ai-explanation-content">${explanation}</div>
         </div>` : ''}
       `;
     }
