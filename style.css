@@ -83,11 +83,76 @@ body.light-theme #ai-explanation-title {
   line-height: 1.5;
 }
 
+/* Continuous single wave left → right */
+@keyframes textWave {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
 .explanation-loading {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-weight: 600;
+  background: linear-gradient(
+    90deg,
+    #2d3748 0%,
+    #ffffff 50%,
+    #2d3748 100%
+  );
+  background-size: 200% auto; /* makes the wave move smoothly */
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textWave 3s linear infinite; /* slow left→right */
 }
+
+/* Light theme (inverted colors) */
+body.light-theme .explanation-loading {
+  background: linear-gradient(
+    90deg,
+    #e2e8f0 0%,
+    #1a202c 50%,
+    #e2e8f0 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textWave 3s linear infinite;
+}
+
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.1) 0%,
+    rgba(255,255,255,1) 50%,
+    rgba(255,255,255,0.1) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textWave 3s linear infinite;
+}
+
+body.light-theme .typing-indicator {
+  background: linear-gradient(
+    90deg,
+    rgba(0,0,0,0.1) 0%,
+    rgba(0,0,0,1) 50%,
+    rgba(0,0,0,0.1) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textWave 3s linear infinite;
+}
+
 
 /* Reset and Base Styles */
 :root { --keyboard-offset: 0px; }
