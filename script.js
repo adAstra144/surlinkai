@@ -48,8 +48,16 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch (e) { /* noop */ }
 });
 
-// === Smooth Scroll for Mouse Wheel (Chat Window only) ===
-// Removed custom smooth scroll implementation - using natural browser scrolling for better performance
+// === burger yes ===
+const toggleBtn = document.getElementById("menuToggle");
+
+toggleBtn.addEventListener("click", () => {
+  toggleBtn.classList.toggle("active");
+  // optional: update aria-expanded
+  const expanded = toggleBtn.getAttribute("aria-expanded") === "true";
+  toggleBtn.setAttribute("aria-expanded", !expanded);
+});
+
 
 // === Scroll Performance Optimization ===
 let scrollTimeout;
