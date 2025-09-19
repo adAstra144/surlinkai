@@ -1292,7 +1292,7 @@ body.light-theme .camera-actions .flip-btn:hover {
     border-right: 1px solid rgba(99, 102, 241, 0.2);
     z-index: 10000; /* above everything */
     transform: translateX(-100%); /* hidden off-screen */
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease 0.15s; /* 0.15s delay before animating */
     pointer-events: none; /* disable clicks when hidden */
   }
 
@@ -1373,7 +1373,8 @@ body.light-theme .camera-actions .flip-btn:hover {
     backdrop-filter: none;
     z-index: 10000;
     transform: translateX(-100%); /* start hidden */
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease 0.15s; /* 0.15s delay before animating */
+    will-change: transform; /* performance hint */
     pointer-events: none; /* block clicks when hidden */
   }
 
