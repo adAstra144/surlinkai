@@ -534,17 +534,8 @@ async function checkApiStatus() {
             headers: { 'Content-Type': 'application/json' }
         });
 
-        // Check explainer API
-        let explainerStatus = "Unknown";
-        try {
-            const expResponse = await fetch(`${explainerUrl}/health`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            explainerStatus = expResponse.ok ? "Available" : "Unavailable";
-        } catch (error) {
-            explainerStatus = "Unavailable";
-        }
+      // APIFreeLLM is always available client-side
+      const explainerStatus = "Available";
 
         if (response.ok) {
             statusIndicator.className = "status-indicator online";
@@ -902,8 +893,8 @@ async function callExplainerModel(message, label) {
     
     // Language-specific prompts
     const prompts = {
-        en: `Your a robot that's good at identifying phishing and safe messages. Explain and point out why the message is classified as "${label}". Answer in 2-3 sentences only. No greetings, no introductions, no closing remarks. Output only the explanation. Message:\n\n${message}`,
-        tl: `Ikaw ay isang robot na magaling magtukoy ng phishing at safe messages. Ipaliwanag at ipakita kung bakit ang mensahe ay kinategorya bilang "${label}". Sagutin ng 2-3 sentences lamang. Walang pagbati, walang introduksyon, walang pagtatapos. Ilagay lamang ang paliwanag kung bakit. Mensahe:\n\n${message}`
+        en: `You are a robot that identifies phishing and safe messages. The message was classified as "${label}". Explain why this decision was made and point out any words or patterns that led to it. Limit your answer to 2–3 sentences. No greetings, introductions, or closing remarks Don't restate the message and whether the message was safe or phishing. Output only the explanation. Message:\n\n${message}`,
+        tl: `Ikaw ay isang robot na nakakatukoy ng phishing at ligtas na mensahe. Ang mensahe ay na-classify bilang "${label}". Ipaliwanag kung bakit ganito ang naging desisyon at ituro ang mga salita o pattern na nagdulot nito. Limitahan ang sagot sa 2–3 pangungusap lang. Walang pagbati, pagpapakilala, o pangwakas na salita. Huwag ng ulitin ang mensahe at kung safe o phishing. Ilabas lang ang paliwanag. Mensahe:\n\n${message}`,
     };
     
     const prompt = prompts[lang] || prompts.en;  // Fallback to English if language not supported
@@ -933,26 +924,8 @@ async function callExplainerModel(message, label) {
     return '__EXPLAINER_UNAVAILABLE__';
   }
 
-  // Fallback: call configured explainerUrl (server-side) if provided
-  if (explainerUrl) {
-    try {
-      const expResp = await fetch(`${explainerUrl}/explain`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, label, lang }) // Include language in request
-      });
-      if (expResp.ok) {
-        const expData = await expResp.json();
-        if (expData.error && (expData.error.toLowerCase().includes('cooldown') || expData.error.toLowerCase().includes('wait') || expData.error.toLowerCase().includes('limit'))) {
-          return '__EXPLAINER_UNAVAILABLE__';
-        }
-        return expData.explanation || '';
-      }
-    } catch (e) {
-      console.warn('Explainer fetch error', e);
-      return '__EXPLAINER_UNAVAILABLE__';
-    }
-  }
+
+    // No fallback: APIFreeLLM only
 
   return '';
 }
