@@ -83,10 +83,10 @@ body.light-theme #ai-explanation-title {
   line-height: 1.5;
 }
 
-/* Continuous single wave left → right */
+/* Loading Animation */
 @keyframes textWave {
-  0%   { background-position: -200% center; }
-  100% { background-position: 200% center; }
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
 }
 
 .explanation-loading {
