@@ -656,23 +656,32 @@ function displayScanResult(classification, confidence, explanation = null) {
             ${advice}
         </div>`;
     
-    if (explanation !== null) {
-        content += `
-        <div id="ai-explanation">
-            <div id="ai-explanation-title">${translations[lang].why_decision}</div>
-            <div id="ai-explanation-content">${explanation}</div>
-        </div>`;
+  if (explanation !== null) {
+    if (explanation === '__EXPLAINER_UNAVAILABLE__') {
+      content += `
+      <div id="ai-explanation" style="margin-top: 12px; color: #f59e42; font-size: 0.95em;">
+        <strong>⚠️ Explanation currently not available.</strong><br>
+        <span style="opacity:0.8;">Too many users are requesting explanations right now. Please try again later.</span>
+      </div>
+      `;
     } else {
-        content += `
-        <div id="ai-explanation" class="explanation-placeholder">
-            <div class="explanation-loading">
-                <div class="typing-dots">
-                    <span></span><span></span><span></span>
-                </div>
-                Generating explanation...
-            </div>
-        </div>`;
+      content += `
+      <div id="ai-explanation">
+        <div id="ai-explanation-title">${translations[lang].why_decision}</div>
+        <div id="ai-explanation-content">${explanation}</div>
+      </div>`;
     }
+  } else {
+    content += `
+    <div id="ai-explanation" class="explanation-placeholder">
+      <div class="explanation-loading">
+        <div class="typing-dots">
+          <span></span><span></span><span></span>
+        </div>
+        Generating explanation...
+      </div>
+    </div>`;
+  }
     
     // Find or create message bubble
     let bubble = chatWindow.querySelector('.message-bubble.ai:last-child');
@@ -899,39 +908,53 @@ async function callExplainerModel(message, label) {
     
     const prompt = prompts[lang] || prompts.en;  // Fallback to English if language not supported
 
-    // Try APIFreeLLM client if loaded on the page
+  // Try APIFreeLLM client if loaded on the page
+  try {
+    if (window.apifree && typeof apifree.chat === 'function') {
+      const resp = await apifree.chat(prompt);
+      // Detect cooldown or unavailable
+      if (typeof resp === 'string') {
+        if (resp.toLowerCase().includes('cooldown') || resp.toLowerCase().includes('wait') || resp.toLowerCase().includes('limit')) {
+          return '__EXPLAINER_UNAVAILABLE__';
+        }
+        return resp.trim();
+      }
+      if (resp && typeof resp === 'object') {
+        if (resp.error && (resp.error.toLowerCase().includes('cooldown') || resp.error.toLowerCase().includes('wait') || resp.error.toLowerCase().includes('limit'))) {
+          return '__EXPLAINER_UNAVAILABLE__';
+        }
+        if (resp.response) return String(resp.response).trim();
+        if (resp.text) return String(resp.text).trim();
+      }
+      return '';
+    }
+  } catch (err) {
+    console.warn('APIFree explain error', err);
+    return '__EXPLAINER_UNAVAILABLE__';
+  }
+
+  // Fallback: call configured explainerUrl (server-side) if provided
+  if (explainerUrl) {
     try {
-        if (window.apifree && typeof apifree.chat === 'function') {
-            const resp = await apifree.chat(prompt);
-            if (typeof resp === 'string') return resp.trim();
-            if (resp && typeof resp === 'object') {
-                if (resp.response) return String(resp.response).trim();
-                if (resp.text) return String(resp.text).trim();
-            }
-            return '';
+      const expResp = await fetch(`${explainerUrl}/explain`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, label, lang }) // Include language in request
+      });
+      if (expResp.ok) {
+        const expData = await expResp.json();
+        if (expData.error && (expData.error.toLowerCase().includes('cooldown') || expData.error.toLowerCase().includes('wait') || expData.error.toLowerCase().includes('limit'))) {
+          return '__EXPLAINER_UNAVAILABLE__';
         }
-    } catch (err) {
-        console.warn('APIFree explain error', err);
+        return expData.explanation || '';
+      }
+    } catch (e) {
+      console.warn('Explainer fetch error', e);
+      return '__EXPLAINER_UNAVAILABLE__';
     }
+  }
 
-    // Fallback: call configured explainerUrl (server-side) if provided
-    if (explainerUrl) {
-        try {
-            const expResp = await fetch(`${explainerUrl}/explain`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message, label, lang }) // Include language in request
-            });
-            if (expResp.ok) {
-                const expData = await expResp.json();
-                return expData.explanation || '';
-            }
-        } catch (e) {
-            console.warn('Explainer fetch error', e);
-        }
-    }
-
-    return '';
+  return '';
 }
 
 // Auto-check API status every 30 seconds
