@@ -48,8 +48,6 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch (e) { /* noop */ }
 });
 
-// === Smooth Scroll for Mouse Wheel (Chat Window only) ===
-// Removed custom smooth scroll implementation - using natural browser scrolling for better performance
 
 // === Scroll Performance Optimization ===
 let scrollTimeout;
@@ -895,8 +893,8 @@ async function callExplainerModel(message, label) {
     
     // Language-specific prompts
     const prompts = {
-        en: `Your a robot that's good at identifying phishing and safe messages. Explain and point out why the message is classified as "${label}". Answer in one short explanation only. No greetings, no introductions, no closing remarks. Output only the explanation. Message:\n\n${message}`,
-        tl: `Ikaw ay isang robot na magaling magtukoy ng phishing at safe messages. Ipaliwanag at ipakita kung bakit ang mensahe ay kinategorya bilang "${label}". Isang maikling paliwanag lamang. Walang pagbati, walang introduksyon, walang pagtatapos. Ilagay lamang ang paliwanag kung bakit. Mensahe:\n\n${message}`
+        en: `Your a robot that's good at identifying phishing and safe messages. Explain and point out why the message is classified as "${label}". Answer in 2-3 sentences only. No greetings, no introductions, no closing remarks. Output only the explanation. Message:\n\n${message}`,
+        tl: `Ikaw ay isang robot na magaling magtukoy ng phishing at safe messages. Ipaliwanag at ipakita kung bakit ang mensahe ay kinategorya bilang "${label}". Sagutin ng 2-3 sentences lamang. Walang pagbati, walang introduksyon, walang pagtatapos. Ilagay lamang ang paliwanag kung bakit. Mensahe:\n\n${message}`
     };
     
     const prompt = prompts[lang] || prompts.en;  // Fallback to English if language not supported
@@ -1337,7 +1335,7 @@ window.addEventListener("load", () => {
     startY = e.touches[0].clientY;
 
     // Open if starting from left edge (within 150px)
-    if (startX <= 150 && !sidebar.classList.contains("open")) {
+    if (startX <= 1000 && !sidebar.classList.contains("open")) {
       isSwiping = "open";
     }
 
