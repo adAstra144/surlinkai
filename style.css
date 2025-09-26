@@ -1,3 +1,45 @@
+/* User image messages in chat window align right */
+.chat-message.user-message.image-message {
+  display: flex;
+  justify-content: flex-end;
+  align-self: flex-end;
+  margin-left: auto;
+  margin-right: 0;
+  max-width: 60%;
+  padding-right: 8px;
+}
+.chat-message.user-message.image-message img {
+  display: block;
+  margin-left: auto;
+  max-width: 220px;
+  max-height: 220px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-radius: 10px;
+  background: #f3f4f6;
+}
+
+@media (min-width: 600px) {
+  .chat-message.user-message.image-message img {
+    max-width: 300px;
+    max-height: 300px;
+  }
+}
+
+@media (min-width: 900px) {
+  .chat-message.user-message.image-message img {
+    max-width: 400px;
+    max-height: 400px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .chat-message.user-message.image-message img {
+    max-width: 500px;
+    max-height: 500px;
+  }
+}
+
+
 .brand-logo img {
   height: 40px;
   width: auto;

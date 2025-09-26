@@ -1058,37 +1058,100 @@ function initFeedback() {
 function setupImagePicker() {
   const fileInput = document.getElementById('imagePicker');
   if (!fileInput) return;
-  fileInput.addEventListener('change', async () => {
+  fileInput.addEventListener('change', () => {
     const file = fileInput.files && fileInput.files[0];
     if (!file) return;
-    
-    // Show loading state
-    const originalBtnText = scanBtn.innerHTML;
-    scanBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Extracting...</span>';
-    scanBtn.disabled = true;
-    
-    try {
-      const img = await createImageBitmap(file);
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
-      const extracted = (text || '').trim();
-      if (extracted) {
-        messageInput.value = extracted;
-        messageInput.dispatchEvent(new Event('input'));
+
+    // Show image in chat immediately
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      const imgUrl = e.target.result;
+      const chatMsg = document.createElement('div');
+      chatMsg.className = 'chat-message user-message image-message';
+      chatMsg.innerHTML = `<img src="${imgUrl}" alt="User uploaded image">`;
+      chatWindow.appendChild(chatMsg);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+
+      // Hide welcome message if present
+      const welcomeMessage = chatWindow.querySelector('.welcome-message');
+      if (welcomeMessage) {
+        welcomeMessage.style.display = 'none';
       }
-    } catch (e) {
-      console.error('Image OCR failed', e);
-      alert('Failed to extract text from image. Please try again.');
-    } finally {
-      // Restore button state
-      scanBtn.innerHTML = originalBtnText;
-      scanBtn.disabled = false;
-      fileInput.value = '';
-    }
+
+      // Disable scan button and show scanning state
+      if (scanBtn) {
+        scanBtn.disabled = true;
+        scanBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Scanning...</span>';
+      }
+
+      // Show typing indicator for OCR
+      showTypingIndicator();
+      let ocrText = '';
+      try {
+        const result = await Tesseract.recognize(imgUrl, 'eng', {
+          logger: m => { /* Optionally show progress */ }
+        });
+        ocrText = result.data.text.trim();
+      } catch (err) {
+        removeTypingIndicator();
+        appendMessage('❌ OCR failed. Could not extract text from image.', 'ai');
+        fileInput.value = '';
+        if (scanBtn) {
+          scanBtn.disabled = false;
+          scanBtn.innerHTML = '<span class="btn-icon">🔍</span><span class="btn-text">Scan</span>';
+        }
+        return;
+      }
+
+      if (!ocrText) {
+        removeTypingIndicator();
+        appendMessage('❌ No readable text found in the image.', 'ai');
+        fileInput.value = '';
+        if (scanBtn) {
+          scanBtn.disabled = false;
+          scanBtn.innerHTML = '<span class="btn-icon">🔍</span><span class="btn-text">Scan</span>';
+        }
+        return;
+      }
+
+      // Scan the recognized text for phishing/safe
+      try {
+        // Show progress bar
+        animateProgressBar();
+        const response = await fetch(`${apiUrl}/analyze`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: ocrText })
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        displayScanResult(data.result, data.confidence);
+        saveToHistory(ocrText, data.result);
+        updateStats(data.result);
+        // Get explanation asynchronously
+        try {
+          const explanation = await callExplainerModel(ocrText, data.result);
+          if (explanation) {
+            displayScanResult(data.result, data.confidence, explanation);
+          }
+        } catch (error) {
+          // Explanation service unavailable
+        }
+      } catch (error) {
+        removeTypingIndicator();
+        hideProgressBar();
+        appendMessage('❌ Error scanning recognized text.', 'ai');
+      } finally {
+        removeTypingIndicator();
+        hideProgressBar();
+        fileInput.value = '';
+        if (scanBtn) {
+          scanBtn.disabled = false;
+          scanBtn.innerHTML = '<span class="btn-icon">🔍</span><span class="btn-text">Scan</span>';
+        }
+      }
+    };
+    reader.readAsDataURL(file);
   });
 }
 let authMode = "login"; // "login" or "register"
