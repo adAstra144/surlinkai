@@ -1059,10 +1059,15 @@ function setupImagePicker() {
   const fileInput = document.getElementById('imagePicker');
   if (!fileInput) return;
   fileInput.addEventListener('change', () => {
+    const imageBtn = document.getElementById('imageOptionsBtn');
     const file = fileInput.files && fileInput.files[0];
     if (!file) return;
 
     // Show image in chat immediately
+    if (imageBtn) {
+      imageBtn.disabled = true;
+      imageBtn.classList.add('disabled');
+    }
     const reader = new FileReader();
     reader.onload = async function(e) {
       const imgUrl = e.target.result;
@@ -1099,6 +1104,10 @@ function setupImagePicker() {
         if (scanBtn) {
           scanBtn.disabled = false;
           scanBtn.innerHTML = '<span class="btn-icon">🔍</span><span class="btn-text">Scan</span>';
+        }
+        if (imageBtn) {
+          imageBtn.disabled = false;
+          imageBtn.classList.remove('disabled');
         }
         return;
       }
@@ -1148,6 +1157,10 @@ function setupImagePicker() {
         if (scanBtn) {
           scanBtn.disabled = false;
           scanBtn.innerHTML = '<span class="btn-icon">🔍</span><span class="btn-text">Scan</span>';
+        }
+        if (imageBtn) {
+          imageBtn.disabled = false;
+          imageBtn.classList.remove('disabled');
         }
       }
     };
