@@ -17,6 +17,33 @@ let safeScans = 0;
 let apiUrl = "https://adastra144-anti-phishing-scanner-0.hf.space";
 let explainerUrl = "";
 let isScanning = false;
+const badgeLevels = [
+  { minLevel: 1, name: "Novice Learner 🐣" },
+  { minLevel: 3, name: "Phishing Hunter 🕵️" },
+  { minLevel: 5, name: "Cyber Guardian 🛡️" },
+  { minLevel: 8, name: "Security Master 🔒" },
+  { minLevel: 10, name: "Cyber Sentinel 👑" }
+];
+
+function getBadgeForLevel(level) {
+  let earned = badgeLevels[0].name;
+  for (const b of badgeLevels) {
+    if (level >= b.minLevel) earned = b.name;
+  }
+  return earned;
+}
+
+// Quit button
+document.addEventListener('click', function (ev) {
+  const btn = ev.target.closest('button');
+  if (!btn) return;
+
+  if (btn.matches('#quizQuitBtn')) {
+    ev.preventDefault();
+    clearTimers();
+    finishQuiz(false, true); // treat as quit
+  }
+});
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
@@ -33,30 +60,27 @@ document.addEventListener('DOMContentLoaded', function() {
     adjustChatBottomPadding();
 
     // APIFreeLLM Explanation toggle button logic
-    window.surLinkExplanationsEnabled = true;
-    const toggleBtn = document.getElementById('toggleExplanationBtn');
-    const statusSpan = document.getElementById('explanationStatus');
-    if (toggleBtn && statusSpan) {
-      toggleBtn.addEventListener('click', function() {
-        window.surLinkExplanationsEnabled = !window.surLinkExplanationsEnabled;
+    // Load explanation toggle state from localStorage, default to true
+    // Always restore from localStorage
+    function updateExplanationToggleUI() {
+      const savedExplanationState = localStorage.getItem('surLinkExplanationsEnabled');
+      window.surLinkExplanationsEnabled = savedExplanationState === null ? true : savedExplanationState === 'true';
+      const toggleBtn = document.getElementById('toggleExplanationBtn');
+      const statusSpan = document.getElementById('explanationStatus');
+      if (toggleBtn && statusSpan) {
         statusSpan.textContent = window.surLinkExplanationsEnabled ? 'On' : 'Off';
-      });
+        toggleBtn.onclick = function() {
+          window.surLinkExplanationsEnabled = !window.surLinkExplanationsEnabled;
+          statusSpan.textContent = window.surLinkExplanationsEnabled ? 'On' : 'Off';
+          localStorage.setItem('surLinkExplanationsEnabled', window.surLinkExplanationsEnabled);
+        };
+      }
     }
+    updateExplanationToggleUI();
+    // Expose for use in section reloads
+    window.updateExplanationToggleUI = updateExplanationToggleUI;
 
-    // iOS/Android virtual keyboard handling: move input above keyboard
-    try {
-        if ('visualViewport' in window) {
-            const onResize = () => {
-                const vv = window.visualViewport;
-                const offset = Math.max(0, (vv && vv.height ? (window.innerHeight - vv.height) : 0));
-                document.documentElement.style.setProperty('--keyboard-offset', offset + 'px');
-                adjustChatBottomPadding();
-                try { chatWindow.scrollTop = chatWindow.scrollHeight; } catch (_) {}
-            };
-            window.visualViewport.addEventListener('resize', onResize);
-            window.visualViewport.addEventListener('scroll', onResize);
-        }
-    } catch (e) { /* noop */ }
+
 });
 
 
@@ -224,16 +248,32 @@ function setupMobileMenu() {
         menuToggle.setAttribute('aria-expanded', 'false');
     };
 
-    menuToggle.addEventListener('click', () => {
-        if (window.matchMedia('(min-width: 1025px)').matches) {
-            // Desktop: toggle collapsed state instead of drawer
-            sidebar.classList.toggle('collapsed');
-            menuToggle.setAttribute('aria-expanded', !sidebar.classList.contains('collapsed'));
-            return;
-        }
-        const willOpen = !sidebar.classList.contains('open');
-        if (willOpen) openMenu(); else closeMenu();
-    });
+  const inputArea = document.querySelector('.input-area');
+  function updateInputAreaTransform() {
+    if (!inputArea) return;
+    if (window.matchMedia('(min-width: 1025px)').matches) {
+      if (sidebar.classList.contains('collapsed')) {
+        inputArea.style.transform = 'translateX(120px)';
+      } else {
+        inputArea.style.transform = 'translateX(280px)';
+      }
+    } else {
+      inputArea.style.transform = '';
+    }
+  }
+  menuToggle.addEventListener('click', () => {
+    if (window.matchMedia('(min-width: 1025px)').matches) {
+      sidebar.classList.toggle('collapsed');
+      menuToggle.setAttribute('aria-expanded', !sidebar.classList.contains('collapsed'));
+      updateInputAreaTransform();
+      return;
+    }
+    const willOpen = !sidebar.classList.contains('open');
+    if (willOpen) openMenu(); else closeMenu();
+  });
+  // Update input area on load and on resize
+  updateInputAreaTransform();
+  window.addEventListener('resize', updateInputAreaTransform);
 
     backdrop.addEventListener('click', (e) => {
         if (!sidebar.contains(e.target)) closeMenu();
@@ -244,23 +284,24 @@ function setupMobileMenu() {
     });
 
     // Handle screen size changes
-    window.matchMedia('(min-width: 1025px)').addEventListener('change', (e) => {
-        if (e.matches) {
-            // Switching to desktop
-            sidebar.classList.remove('open');
-            backdrop.hidden = true;
-            backdrop.style.pointerEvents = 'none';
-            document.body.classList.remove('no-scroll');
-            // Start expanded on desktop
-            sidebar.classList.remove('collapsed');
-            menuToggle.setAttribute('aria-expanded', 'true');
-        } else {
-            // Switching to mobile
-            sidebar.classList.remove('collapsed');
-            // Start closed on mobile
-            closeMenu();
-        }
-    });
+  window.matchMedia('(min-width: 1025px)').addEventListener('change', (e) => {
+    if (e.matches) {
+      // Switching to desktop
+      sidebar.classList.remove('open');
+      backdrop.hidden = true;
+      backdrop.style.pointerEvents = 'none';
+      document.body.classList.remove('no-scroll');
+      // Start expanded on desktop
+      sidebar.classList.remove('collapsed');
+      menuToggle.setAttribute('aria-expanded', 'true');
+    } else {
+      // Switching to mobile
+      sidebar.classList.remove('collapsed');
+      // Start closed on mobile
+      closeMenu();
+    }
+    updateInputAreaTransform();
+  });
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeMenu();
@@ -338,17 +379,7 @@ function showSection(sectionName) {
             checkApiStatus();
             // Attach explanations toggle event listener after loading status section
             setTimeout(() => {
-              const toggleBtn = document.getElementById('toggleExplanationBtn');
-              const statusSpan = document.getElementById('explanationStatus');
-              if (toggleBtn && statusSpan) {
-                // Use a property on window to persist state
-                if (typeof window.surLinkExplanationsEnabled === 'undefined') window.surLinkExplanationsEnabled = true;
-                statusSpan.textContent = window.surLinkExplanationsEnabled ? 'On' : 'Off';
-                toggleBtn.onclick = function() {
-                  window.surLinkExplanationsEnabled = !window.surLinkExplanationsEnabled;
-                  statusSpan.textContent = window.surLinkExplanationsEnabled ? 'On' : 'Off';
-                };
-              }
+              if (window.updateExplanationToggleUI) window.updateExplanationToggleUI();
             }, 0);
             const lang = localStorage.getItem('surLinkLang') || 'en';
             setTimeout(() => applyTranslations(lang), 0);
@@ -377,16 +408,7 @@ function showSection(sectionName) {
     if (sectionName === 'status') {
       checkApiStatus();
       setTimeout(() => {
-        const toggleBtn = document.getElementById('toggleExplanationBtn');
-        const statusSpan = document.getElementById('explanationStatus');
-        if (toggleBtn && statusSpan) {
-          if (typeof window.surLinkExplanationsEnabled === 'undefined') window.surLinkExplanationsEnabled = true;
-          statusSpan.textContent = window.surLinkExplanationsEnabled ? 'On' : 'Off';
-          toggleBtn.onclick = function() {
-            window.surLinkExplanationsEnabled = !window.surLinkExplanationsEnabled;
-            statusSpan.textContent = window.surLinkExplanationsEnabled ? 'On' : 'Off';
-          };
-        }
+        if (window.updateExplanationToggleUI) window.updateExplanationToggleUI();
       }, 0);
     }
     if (sectionName === 'quiz' && !window.__quizInit) {
@@ -1208,8 +1230,12 @@ async function scanMessage() {
     saveToHistory(message, data.result);
     updateStats(data.result);
         
-    // Only call explanation if enabled
-    if (window.surLinkExplanationsEnabled) {
+    // Always check localStorage for the latest explanation toggle state
+    const savedExplanationState = localStorage.getItem('surLinkExplanationsEnabled');
+    const explanationsEnabled = savedExplanationState === null ? true : savedExplanationState === 'true';
+    window.surLinkExplanationsEnabled = explanationsEnabled;
+    if (window.updateExplanationToggleUI) window.updateExplanationToggleUI(); // keep UI in sync
+    if (explanationsEnabled) {
       try {
         const explanation = await callExplainerModel(message, data.result);
         if (explanation) {
@@ -1395,12 +1421,12 @@ function initStatsSection() {
     });
   }
 
-  // hook reset button (prevent multiple listeners)
-  if (resetBtn) {
-    resetBtn.replaceWith(resetBtn.cloneNode(true));
-    const newResetBtn = document.getElementById('resetStatsBtn');
-    newResetBtn.addEventListener('click', () => {
-      showAppModal({
+// hook reset button (prevent multiple listeners)
+if (resetBtn) {
+  resetBtn.replaceWith(resetBtn.cloneNode(true));
+  const newResetBtn = document.getElementById('resetStatsBtn');
+  newResetBtn.addEventListener('click', () => {
+    showAppModal({
         type: 'reset',
         onConfirm: () => {
           totalScans = phishingScans = safeScans = 0;
