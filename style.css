@@ -1452,6 +1452,12 @@ body.light-theme .quiz-difficulty {
   line-height: 1.4;
 }
 
+@media (max-width: 600px) {
+  body.light-theme .quiz-difficulty {
+    text-align: left;
+  }
+}
+
 /* Subtext inside difficulty buttons */
 body.light-theme .quiz-difficulty span {
   font-size: 0.8rem;
@@ -1469,19 +1475,19 @@ body.light-theme .quiz-difficulty:hover {
 
 /* Optional: difficulty accent colors */
 body.light-theme .quiz-difficulty[data-mode="easy"]:hover {
-  background: #ecfdf5; /* green tint */
+  background: #d1fae5; /* green tint */
   border-color: #10b981;
   color: #111827;
 }
 
 body.light-theme .quiz-difficulty[data-mode="medium"]:hover {
-  background: #fff7ed; /* orange tint */
+  background: #ffedd5; /* orange tint */
   border-color: #f97316;
   color: #111827;
 }
 
 body.light-theme .quiz-difficulty[data-mode="hard"]:hover {
-  background: #fef2f2; /* red tint */
+  background: #fee2e2; /* red tint */
   border-color: #ef4444;
   color: #111827;
 }
@@ -1624,7 +1630,7 @@ body.light-theme .quiz-lives .heart {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    text-align: left;
+    text-align: center;
   }
 
   .quiz-difficulty span {
