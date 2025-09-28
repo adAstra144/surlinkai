@@ -16,10 +16,21 @@
   display: block !important;
 }
 body.light-theme .quiz-diff-label {
+  font-weight: 600 !important;
+  font-size: 1rem !important;
   color: #111827 !important;
+  margin-right: 0;
+  letter-spacing: -0.5px;
+  display: inline-block;
 }
 body.light-theme .quiz-diff-desc {
+  font-weight: 400 !important;
+  font-size: 0.85rem !important;
   color: #6b7280 !important;
+  margin-top: 6px !important;
+  margin-bottom: 0 !important;
+  line-height: 1.22 !important;
+  display: block !important;
 }
 body.light-theme .history-item,
 body.light-theme .history-item > div,
@@ -865,7 +876,7 @@ body.no-scroll { overflow: hidden; }
   transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
 }
 .quiz-diff-row {
-  display: flex;
+  display: block;
   align-items: center;
   gap: 8px;
   font-size: 1.13rem;
@@ -1314,13 +1325,6 @@ body.light-theme #quizDifficulty p {
   margin-bottom: 16px;
 }
 
-/* Grid layout for difficulty buttons */
-body.light-theme .quiz-mode-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
 /* Difficulty buttons */
 body.light-theme .quiz-difficulty {
   background: #ffffff;
@@ -1332,13 +1336,12 @@ body.light-theme .quiz-difficulty {
   color: #111827;
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
   transition: all 0.25s ease;
-  text-align: center;
+  text-align: left;
   line-height: 1.4;
 }
 
 /* Subtext inside difficulty buttons */
 body.light-theme .quiz-difficulty span {
-  display: block;
   font-size: 0.8rem;
   font-weight: 400;
   color: #6b7280;
@@ -1356,15 +1359,32 @@ body.light-theme .quiz-difficulty:hover {
 body.light-theme .quiz-difficulty[data-mode="easy"]:hover {
   background: #ecfdf5; /* green tint */
   border-color: #10b981;
+  color: #111827;
 }
 
 body.light-theme .quiz-difficulty[data-mode="medium"]:hover {
   background: #fff7ed; /* orange tint */
   border-color: #f97316;
+  color: #111827;
 }
 
 body.light-theme .quiz-difficulty[data-mode="hard"]:hover {
   background: #fef2f2; /* red tint */
+  border-color: #ef4444;
+  color: #111827;
+}
+
+/* Default (dark) theme: difficulty accent colors */
+.quiz-difficulty[data-mode="easy"]:hover {
+  background: #073c36; /* dark green tint */
+  border-color: #10b981;
+}
+.quiz-difficulty[data-mode="medium"]:hover {
+  background: #3a2c13; /* dark orange tint */
+  border-color: #f97316;
+}
+.quiz-difficulty[data-mode="hard"]:hover {
+  background: #3b1212; /* dark red tint */
   border-color: #ef4444;
 }
 
@@ -1453,7 +1473,7 @@ body.light-theme .quiz-lives .heart {
 
   .quiz-difficulty {
   min-height: 90px;         /* makes them look more like square buttons */
-  text-align: center;
+  text-align: left;
   font-size: 0.95rem;
   line-height: 1.3;
   display: flex;
@@ -1492,7 +1512,7 @@ body.light-theme .quiz-lives .heart {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    text-align: center;
+    text-align: left;
   }
 
   .quiz-difficulty span {
