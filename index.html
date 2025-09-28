@@ -200,32 +200,32 @@
 <div id="quizMainSection" class="content-section">
   <div class="content-scroll">
     <div class="quiz-banner">
-  <h1>🛡️ Cyber Defender</h1>
-  <p>Beat the phishing attacks. Gain XP. Unlock badges.</p>
+  <h1>🛡️ <span data-i18n="quiz_title">Cyber Defender</span></h1>
+  <p data-i18n="quiz_tagline">Beat the phishing attacks. Gain XP. Unlock badges.</p>
 </div>
 
     <!-- STEP 1: WELCOME SCREEN -->
    <div id="quizWelcome" class="quiz-card">
-  <h2>🎮 Welcome, Agent!</h2>
-  <p>
+  <h2>🎮 <span data-i18n="quiz_welcome_title">Welcome, Agent!</span></h2>
+  <p data-i18n="quiz_welcome_desc">
     Your mission: Identify phishing threats and secure cyberspace.  
     Earn <span class="quiz-xp">XP</span>, build streaks, and unlock badges.
   </p>
   <div class="quiz-actions" style="justify-content:center; margin-top:18px;">
-    <button id="quizStartBtn" class="scan-btn start-btn">▶️ Start Game</button>
+    <button id="quizStartBtn" class="scan-btn start-btn" data-i18n="quiz_start_btn">▶️ Start Game</button>
     
   </div>
 </div>
 
     <!-- STEP 2: DIFFICULTY SELECTION (hidden until Start pressed) -->
 <div id="quizDifficulty" class="quiz-card" style="display:none;">
-  <h2>Choose Your Challenge ⚔️</h2>
-  <p style="margin-bottom:14px;">Pick a mode to test your skills:</p>
+  <h2><span data-i18n="quiz_choose_title">Choose Your Challenge</span> ⚔️</h2>
+  <p style="margin-bottom:14px;" data-i18n="quiz_choose_desc">Pick a mode to test your skills:</p>
   <div class="quiz-mode-grid">
-    <button class="quiz-difficulty" data-mode="easy">🌱 Easy<br><span>Learn the basics</span></button>
-    <button class="quiz-difficulty" data-mode="medium">🔥 Medium<br><span>Ready for more?</span></button>
-    <button class="quiz-difficulty" data-mode="hard">💀 Hard<br><span>For experts only</span></button>
-    <button class="quiz-difficulty" data-mode="endless">♾️ Endless<br><span>Survive as long as you can</span></button>
+    <button class="quiz-difficulty" data-mode="easy">🌱 <span data-i18n="quiz_easy">Easy</span><br><span data-i18n="quiz_easy_desc">Learn the basics</span></button>
+    <button class="quiz-difficulty" data-mode="medium">🔥 <span data-i18n="quiz_medium">Medium</span><br><span data-i18n="quiz_medium_desc">Ready for more?</span></button>
+    <button class="quiz-difficulty" data-mode="hard">💀 <span data-i18n="quiz_hard">Hard</span><br><span data-i18n="quiz_hard_desc">For experts only</span></button>
+    <button class="quiz-difficulty" data-mode="endless">♾️ <span data-i18n="quiz_endless">Endless</span><br><span data-i18n="quiz_endless_desc">Survive as long as you can</span></button>
   </div>
 </div>
 
@@ -237,27 +237,28 @@
             <div class="quiz-progress-fill" id="quizProgressFill" style="width:0%"></div>
           </div>
           <div class="quiz-meta">
-            <span id="quizProgress" class="quiz-progress-text">Question 1</span>
-            <span id="quizScore" class="quiz-score">Score: 0</span>
-            <span id="quizLevel" class="quiz-level">Lvl 0</span>
-            <span id="quizXP" class="quiz-xp">XP: 0 / 50</span>
+            <span id="quizProgress" class="quiz-progress-text" data-i18n="quiz_progress">Question 1</span>
+            <span id="quizScore" class="quiz-score" data-i18n="quiz_score">Score: 0</span>
+            <span id="quizLevel" class="quiz-level" data-i18n="quiz_level">Lvl 0</span>
+            <span id="quizXP" class="quiz-xp" data-i18n="quiz_xp">XP: 0 / 50</span>
           </div>
         </div>
 
         <div class="quiz-right">
           <div id="quizLives" class="quiz-lives" aria-live="polite">❤️❤️❤️</div>
-          <div id="quizStreak">🔥 0 | 🏆 Best: 0</div>
-          <div id="quizTimer" class="quiz-timer" role="status" aria-live="polite">20s</div>
+          <div id="quizStreak" data-i18n="quiz_streak">🔥 0 | 🏆 Best: 0</div>
+          <div id="quizTimer" class="quiz-timer" role="status" aria-live="polite" data-i18n="quiz_timer">20s</div>
         </div>
       </div>
 
       <div id="quizQuestion" class="quiz-question"></div>
       <div id="quizAnswers" class="quiz-answers"></div>
+
       <div id="quizFeedback" class="quiz-feedback" aria-live="polite"></div>
 
 <div class="quiz-actions" style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end;">
-  <button id="quizQuitBtn" class="scan-btn outline">Quit</button>
-  <button id="quizRestartBtn" class="scan-btn outline" style="display:none;">Restart</button>
+  <button id="quizQuitBtn" class="scan-btn outline" data-i18n="quiz_quit">Quit</button>
+  <button id="quizRestartBtn" class="scan-btn outline" style="display:none;" data-i18n="quiz_restart">Restart</button>
 </div>
 
       <!-- Badge (hidden until end) -->
@@ -340,7 +341,8 @@
     }, 3000); // Keep splash for 3 seconds
   });
 </script>
-  
+
+  <script src="questions.tl.js"></script>
   <script src="questions.js"></script>
   <script src="https://apifreellm.com/apifree.min.js"></script>
   <script src="script.js" defer></script>

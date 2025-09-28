@@ -1,4 +1,4 @@
-const questionBank = {
+window.questionBank = {
   easy: [
     { q: "Phishing emails often ask for your ____?", a: [
       { text: "Birthday party invite", correct: false },

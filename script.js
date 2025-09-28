@@ -376,19 +376,26 @@ function initQuiz() {
   if (window.__surlinkQuizInit) return;
   window.__surlinkQuizInit = true;
 
-function getNextQuestion() {
-  if (endlessMode) {
-    const pools = [
-      ...questionBank.easy,
-      ...questionBank.medium,
-      ...questionBank.hard
-    ];
-    return pools[Math.floor(Math.random() * pools.length)];
+  // Support both English (default) and Tagalog
+  const lang = localStorage.getItem('surLinkLang') || 'en';
+  let activeQuestionBank = window.questionBank;
+  if (lang === 'tl' && window.questionBankTL) {
+    activeQuestionBank = window.questionBankTL;
   }
-  const pool = questionBank[difficulty] || questionBank.medium;
-  return pool[Math.floor(Math.random() * pool.length)];
-}
- 
+
+  function getNextQuestion() {
+    if (endlessMode) {
+      const pools = [
+        ...activeQuestionBank.easy,
+        ...activeQuestionBank.medium,
+        ...activeQuestionBank.hard
+      ];
+      return pools[Math.floor(Math.random() * pools.length)];
+    }
+    const pool = activeQuestionBank[difficulty] || activeQuestionBank.medium;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
  
 
   // --- Elements (grab once; later code checks exist) ---
@@ -497,10 +504,14 @@ function addXP(amount) {
 
   function getNextQuestion() {
     if (endlessMode) {
-      const pools = [...questionBank.easy, ...questionBank.medium, ...questionBank.hard];
+      const pools = [
+        ...activeQuestionBank.easy,
+        ...activeQuestionBank.medium,
+        ...activeQuestionBank.hard
+      ];
       return pools[Math.floor(Math.random() * pools.length)];
     }
-    const pool = questionBank[difficulty] || questionBank.medium;
+    const pool = activeQuestionBank[difficulty] || activeQuestionBank.medium;
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
@@ -512,7 +523,7 @@ function updateProgressUI() {
     quizProgress.textContent = `Question ${idx + 1} (Endless)`;
     quizProgressFill.style.width = "100%"; // fixed bar for endless
   } else {
-    const total = questionBank[difficulty] ? questionBank[difficulty].length : 1;
+    const total = activeQuestionBank[difficulty] ? activeQuestionBank[difficulty].length : 1;
     quizProgress.textContent = `Question ${idx + 1} / ${total}`;
     const percent = Math.round(((idx + 1) / total) * 100);
     quizProgressFill.style.width = `${percent}%`;
@@ -759,24 +770,27 @@ function finishQuiz(won = true, quit = false) {
   let title = won ? "🏆 Mission Complete!" : "💀 Game Over";
   if (quit) title = "🚪 You quit the game";
 
-  // Build results card
+  // Build results card with data-i18n attributes
   let resultHTML = `
     <div class="quiz-result-card">
       <h2 class="result-title">${title}</h2>
       <div class="result-stats">
-        <div><strong>📊 Score:</strong> ${score}</div>
-        <div><strong>⭐ XP:</strong> ${xp}</div>
-        <div><strong>🏅 Badge:</strong> ${badge}</div>
-        <div><strong>🔥 Best Streak:</strong> ${bestStreak}</div>
+        <div><strong data-i18n="quiz_result_score">📊 Score:</strong> ${score}</div>
+        <div><strong data-i18n="quiz_result_xp">⭐ XP:</strong> ${xp}</div>
+        <div><strong data-i18n="quiz_result_badge">🏅 Badge:</strong> ${badge}</div>
+        <div><strong data-i18n="quiz_result_best">🔥 Best Streak:</strong> ${bestStreak}</div>
       </div>
       <div class="quiz-actions" style="margin-top:16px;display:flex;gap:10px;justify-content:center;">
-        <button id="resultsRestartBtn" class="scan-btn">🔄 Play Again</button>
-        <button id="resultsMenuBtn" class="scan-btn outline">🏠 Main Menu</button>
+        <button id="resultsRestartBtn" class="scan-btn" data-i18n="quiz_result_play_again">🔄 Play Again</button>
+        <button id="resultsMenuBtn" class="scan-btn outline" data-i18n="quiz_result_main_menu">🏠 Main Menu</button>
       </div>
     </div>
   `;
 
   if (quizQuestion) quizQuestion.innerHTML = resultHTML;
+  // Re-apply translations to dynamically inserted result card
+  const lang = localStorage.getItem('surLinkLang') || 'en';
+  if (typeof applyTranslations === 'function') applyTranslations(lang);
   if (quizFeedback) quizFeedback.textContent = '';
   if (quizBadge) quizBadge.style.display = 'none';
 
@@ -865,8 +879,8 @@ function render() {
       clearTimers();
       idx++;
       if (!currentQuestion || idx >= 10000) { /* safety */ }
-      if (!questionBank) return;
-      if (!endlessMode && idx >= (questionBank[difficulty] ? questionBank[difficulty].length : 0)) {
+      if (!activeQuestionBank) return;
+      if (!endlessMode && idx >= (activeQuestionBank[difficulty] ? activeQuestionBank[difficulty].length : 0)) {
         finishQuiz(true);
       } else {
         render();
@@ -1044,7 +1058,14 @@ function displayScanResult(classification, confidence, explanation = null) {
     const icon = isPhishing ? "🚨" : "✅";
     const color = isPhishing ? "#ef4444" : "#10b981";
     const lang = localStorage.getItem('surLinkLang') || 'en';
-    const advice = isPhishing ? translations[lang].phishing_advice : translations[lang].safe_advice;
+    let advice;
+    if (lang === 'tl') {
+      advice = isPhishing ? translations.tl.phishing_advice : translations.tl.safe_advice;
+    } else {
+      advice = isPhishing
+        ? `⚠️ This message looks suspicious and may be a phishing attempt.<br><br>👉 <b>What to do:</b> Do not reply, share personal details, or click any links/attachments.<br><br>🛡️ Best action: ignore, delete, or report it.<br><br>🔒 <b>How to avoid phishing:</b><br>• Check the sender’s email/number carefully.<br>• Watch for spelling mistakes or odd grammar.<br>• Don’t trust urgent scare tactics like “act now”.<br>• Use official apps or websites instead of in-message links.`
+        : `✅ This message appears safe.<br><br>👉 <b>What to do:</b> You can continue normally, but stay alert for anything unusual.<br><br>💡 <b>Safety tips:</b><br>• Double-check the sender/source if unsure.<br>• Be careful with unexpected links or files.<br>• Keep your device and security tools updated.<br>• When in doubt, verify through official channels.`;
+    }
     
     let content = `
         <div style="color: ${color}; font-weight: 600;">
@@ -1165,7 +1186,14 @@ function formatResult(data) {
     const explanation = (data && typeof data.explanation === 'string' && data.explanation.trim()) ? data.explanation.trim() : '';
     const icon = isPhishing ? "🚨" : "✅";
     const color = isPhishing ? "#ef4444" : "#10b981";
-    const advice = isPhishing ? translations[lang].phishing_advice : translations[lang].safe_advice;
+    let advice;
+    if (lang === 'tl') {
+      advice = isPhishing ? translations.tl.phishing_advice : translations.tl.safe_advice;
+    } else {
+      advice = isPhishing
+        ? `⚠️ This message looks suspicious and may be a phishing attempt.<br><br>👉 <b>What to do:</b> Do not reply, share personal details, or click any links/attachments.<br><br>🛡️ Best action: ignore, delete, or report it.<br><br>🔒 <b>How to avoid phishing:</b><br>• Check the sender’s email/number carefully.<br>• Watch for spelling mistakes or odd grammar.<br>• Don’t trust urgent scare tactics like “act now”.<br>• Use official apps or websites instead of in-message links.`
+        : `✅ This message appears safe.<br><br>👉 <b>What to do:</b> You can continue normally, but stay alert for anything unusual.<br><br>💡 <b>Safety tips:</b><br>• Double-check the sender/source if unsure.<br>• Be careful with unexpected links or files.<br>• Keep your device and security tools updated.<br>• When in doubt, verify through official channels.`;
+    }
     return `
         <div style="color: ${color}; font-weight: 600;">
             ${icon} <strong>${result}</strong>
@@ -2021,53 +2049,6 @@ window.addEventListener("load", () => {
 
 // Translate website 
 const translations = {
-  en: {
-    title: "SûrLink",
-    tagline: "Built to Detect, Designed to Protect",
-    chat_scanner: "Chat Scanner",
-    scan_history: "Scan History",
-    statistics: "Statistics",
-    quiz: "Gamified Quiz",
-    api_status: "API Status",
-    feedback: "Feedback",
-    account: "Account",
-    not_logged_in: "Not logged in",
-    login_register: "Login / Register",
-    logout: "Logout",
-    appearance: "Appearance",
-    welcome: "Welcome to SûrLink",
-    welcome_desc: "I'm here to help you detect phishing attempts in messages, emails, and text content using advanced AI technology.",
-    try_examples: "Try these examples:",
-    example1: "Your account has been suspended. Click here to verify immediately.",
-    example2: "Congratulations! You've won $1000. Claim your prize now.",
-    example3: "Your package is ready for pickup. Click to confirm delivery.",
-    message_placeholder: "Enter your message here...",
-    scan: "Scan",
-    recent_scans: "Recent Scans",
-    no_scans: "No scans yet",
-    scan_statistics: "Scan Statistics",
-    total_scans: "Total Scans",
-    phishing_detected: "Phishing Detected",
-    safe_messages: "Safe Messages",
-    checking: "Checking...",
-    feedback_title: "We value your feedback",
-    feedback_type: "Feedback Type",
-    suggestion: "💡 Suggestion",
-    bug: "🐞 Bug Report",
-    question: "❓ Question",
-    your_feedback: "Your Feedback",
-    feedback_placeholder: "Type your feedback here...",
-    submit: "Submit",
-    clear: "Clear",
-    login: "Login",
-    register: "Register",
-    or: "OR",
-    dont_have_account: "Don't have an account? Register here",
-    already_have_account: "Already have an account? Login here",
-    safe_advice: `✅ This message appears safe.<br><br>👉 <b>What to do:</b> You can continue normally, but stay alert for anything unusual.<br><br>💡 <b>Safety tips:</b><br>• Double-check the sender/source if unsure.<br>• Be careful with unexpected links or files.<br>• Keep your device and security tools updated.<br>• When in doubt, verify through official channels.`,
-    phishing_advice: `⚠️ This message looks suspicious and may be a phishing attempt.<br><br>👉 <b>What to do:</b> Do not reply, share personal details, or click any links/attachments.<br><br>🛡️ Best action: ignore, delete, or report it.<br><br>🔒 <b>How to avoid phishing:</b><br>• Check the sender’s email/number carefully.<br>• Watch for spelling mistakes or odd grammar.<br>• Don’t trust urgent scare tactics like “act now”.<br>• Use official apps or websites instead of in-message links.`,
-    why_decision: "Why this decision",
-  },
   tl: {
     title: "SûrLink",
     tagline: "Gawa para Mag-detect, Disenyo para Magprotekta",
@@ -2114,114 +2095,170 @@ const translations = {
     safe_advice: `✅ Ang mensaheng ito ay mukhang ligtas.<br><br>👉 <b>Anong gagawin:</b> Maaari kang magpatuloy, ngunit manatiling alerto sa anumang kakaiba.<br><br>💡 <b>Mga tip sa kaligtasan:</b><br>• Suriing mabuti ang pinagmulan kung nagdududa.<br>• Mag-ingat sa di-inaasahang link o file.<br>• Panatilihing updated ang iyong device at security tools.<br>• Kapag nagdududa, mag-verify sa opisyal na paraan.`,
     phishing_advice: `⚠️ Ang mensaheng ito ay kahina-hinala at maaaring phishing attempt.<br><br>👉 <b>Anong gagawin:</b> Huwag sumagot, magbahagi ng personal na detalye, o mag-click ng anumang link/attachment.<br><br>🛡️ Pinakamainam: balewalain, burahin, o i-report ito.<br><br>🔒 <b>Paano iwasan ang phishing:</b><br>• Suriing mabuti ang email/number ng nagpadala.<br>• Mag-ingat sa maling spelling o kakaibang grammar.<br>• Huwag magtiwala sa mga nagmamadaling pananakot tulad ng “kumilos agad”.<br>• Gamitin ang opisyal na app o website sa halip na link sa mensahe.`,
     why_decision: "Bakit ito ang desisyon",
+
+    // === QUIZ TRANSLATIONS ===
+    quiz_title: "Cyber Defender",
+    quiz_tagline: "Talunin ang phishing attacks. Kumita ng XP. Mag-unlock ng mga badge.",
+    quiz_welcome_title: "Maligayang Pagdating, Ahente!",
+    quiz_welcome_desc: "Iyong misyon: Tukuyin ang phishing threats at protektahan ang cyberspace. Kumita ng XP, bumuo ng streaks, at mag-unlock ng mga badge.",
+    quiz_start_btn: "▶️ Simulan ang Laro",
+    quiz_choose_title: "Piliin ang Iyong Hamon",
+    quiz_choose_desc: "Pumili ng mode para subukan ang iyong kakayahan:",
+    quiz_easy: "Madali",
+    quiz_easy_desc: "Matutunan ang mga batayan",
+    quiz_medium: "Katamtaman",
+    quiz_medium_desc: "Handa ka pa ba?",
+    quiz_hard: "Mahirap",
+    quiz_hard_desc: "Para lamang sa eksperto",
+    quiz_endless: "Walang Hanggan",
+    quiz_endless_desc: "Buhay nang matagal hangga't kaya",
+    quiz_progress: "Tanong 1",
+    quiz_score: "Iskor: 0",
+    quiz_level: "Lvl 0",
+    quiz_xp: "XP: 0 / 50",
+    quiz_streak: "🔥 0 | 🏆 Pinakamataas: 0",
+    quiz_timer: "20s",
+    quiz_quit: "Tumigil",
+    quiz_restart: "Magsimula Muli",
+    quiz_result_score: "📊 Iskor:",
+    quiz_result_xp: "⭐ XP:",
+    quiz_result_badge: "🏅 Badge:",
+    quiz_result_best: "🔥 Pinakamataas:",
+    quiz_result_play_again: "🔄 Simulan Muli",
+    quiz_result_main_menu: "🏠 Main Menu",
   }
 };
 
+
 // --- Language Switcher Logic ---
 
-function applyTranslations(lang) {
-  // Update all elements with data-i18n
+// Store default text for all translatable elements on first load
+const defaultI18n = {};
+document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
-    if (translations[lang][key]) {
-      el.innerHTML = translations[lang][key];
-    }
+    defaultI18n[key] = el.innerHTML;
   });
-
-  // Update placeholders
-  if (messageInput && translations[lang].message_placeholder) {
-    messageInput.placeholder = translations[lang].message_placeholder;
-  }
+  // Store default placeholders
+  if (window.messageInput) window.messageInput._defaultPlaceholder = window.messageInput.placeholder;
   const feedbackMsg = document.getElementById('feedbackMessage');
-  if (feedbackMsg && translations[lang].feedback_placeholder) {
-    feedbackMsg.placeholder = translations[lang].feedback_placeholder;
-  }
-
+  if (feedbackMsg) feedbackMsg._defaultPlaceholder = feedbackMsg.placeholder;
   // Auth modal
   const authTitle = document.getElementById('authTitle');
-  if (authTitle && translations[lang][authMode]) {
-    authTitle.innerText = translations[lang][authMode];
-  }
+  if (authTitle) authTitle._defaultText = authTitle.innerText;
   const authBtn = document.querySelector('#authModal button.scan-btn');
-  if (authBtn && translations[lang][authMode]) {
-    authBtn.innerText = translations[lang][authMode];
-  }
+  if (authBtn) authBtn._defaultText = authBtn.innerText;
   const authSwitch = document.getElementById('authSwitch');
-  if (authSwitch) {
-    authSwitch.innerHTML = authMode === "login"
-      ? translations[lang].dont_have_account
-      : translations[lang].already_have_account;
-  }
-
+  if (authSwitch) authSwitch._defaultHTML = authSwitch.innerHTML;
   // Feedback type options
   const feedbackType = document.getElementById('feedbackType');
   if (feedbackType) {
-    feedbackType.options[0].text = translations[lang].suggestion;
-    feedbackType.options[1].text = translations[lang].bug;
-    feedbackType.options[2].text = translations[lang].question;
+    for (let i = 0; i < feedbackType.options.length; i++) {
+      feedbackType.options[i]._defaultText = feedbackType.options[i].text;
+    }
   }
-
   // Feedback buttons
   const submitBtn = document.getElementById('submitFeedback');
-  if (submitBtn && translations[lang].submit) submitBtn.innerText = translations[lang].submit;
+  if (submitBtn) submitBtn._defaultText = submitBtn.innerText;
   const clearBtn = document.getElementById('clearFeedback');
-  if (clearBtn && translations[lang].clear) clearBtn.innerText = translations[lang].clear;
-
+  if (clearBtn) clearBtn._defaultText = clearBtn.innerText;
   // Scan button
-  if (scanBtn && translations[lang].scan) {
+  if (window.scanBtn) {
     const btnText = scanBtn.querySelector('.btn-text');
-    if (btnText) btnText.innerText = translations[lang].scan;
+    if (btnText) btnText._defaultText = btnText.innerText;
   }
-}
+});
 
 function applyTranslations(lang) {
   // Update all elements with data-i18n
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    if (translations[lang][key]) {
-      el.innerHTML = translations[lang][key];
+  if (lang === 'tl') {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (translations.tl[key]) {
+        el.innerHTML = translations.tl[key];
+      }
+    });
+    if (messageInput && translations.tl.message_placeholder) {
+      messageInput.placeholder = translations.tl.message_placeholder;
     }
-  });
-
-  // Update placeholders
-  if (messageInput && translations[lang].message_placeholder) {
-    messageInput.placeholder = translations[lang].message_placeholder;
+    const feedbackMsg = document.getElementById('feedbackMessage');
+    if (feedbackMsg && translations.tl.feedback_placeholder) {
+      feedbackMsg.placeholder = translations.tl.feedback_placeholder;
+    }
+    const authTitle = document.getElementById('authTitle');
+    if (authTitle && translations.tl[authMode]) {
+      authTitle.innerText = translations.tl[authMode];
+    }
+    const authBtn = document.querySelector('#authModal button.scan-btn');
+    if (authBtn && translations.tl[authMode]) {
+      authBtn.innerText = translations.tl[authMode];
+    }
+    const authSwitch = document.getElementById('authSwitch');
+    if (authSwitch) {
+      authSwitch.innerHTML = authMode === "login"
+        ? translations.tl.dont_have_account
+        : translations.tl.already_have_account;
+    }
+    const feedbackType = document.getElementById('feedbackType');
+    if (feedbackType) {
+      feedbackType.options[0].text = translations.tl.suggestion;
+      feedbackType.options[1].text = translations.tl.bug;
+      feedbackType.options[2].text = translations.tl.question;
+    }
+    const submitBtn = document.getElementById('submitFeedback');
+    if (submitBtn && translations.tl.submit) submitBtn.innerText = translations.tl.submit;
+    const clearBtn = document.getElementById('clearFeedback');
+    if (clearBtn && translations.tl.clear) clearBtn.innerText = translations.tl.clear;
+    if (scanBtn && translations.tl.scan) {
+      const btnText = scanBtn.querySelector('.btn-text');
+      if (btnText) btnText.innerText = translations.tl.scan;
+    }
+  } else {
+    // Restore all default text and placeholders
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (defaultI18n[key]) {
+        el.innerHTML = defaultI18n[key];
+      }
+    });
+    if (messageInput && messageInput._defaultPlaceholder) {
+      messageInput.placeholder = messageInput._defaultPlaceholder;
+    }
+    const feedbackMsg = document.getElementById('feedbackMessage');
+    if (feedbackMsg && feedbackMsg._defaultPlaceholder) {
+      feedbackMsg.placeholder = feedbackMsg._defaultPlaceholder;
+    }
+    const authTitle = document.getElementById('authTitle');
+    if (authTitle && authTitle._defaultText) {
+      authTitle.innerText = authTitle._defaultText;
+    }
+    const authBtn = document.querySelector('#authModal button.scan-btn');
+    if (authBtn && authBtn._defaultText) {
+      authBtn.innerText = authBtn._defaultText;
+    }
+    const authSwitch = document.getElementById('authSwitch');
+    if (authSwitch && authSwitch._defaultHTML) {
+      authSwitch.innerHTML = authSwitch._defaultHTML;
+    }
+    const feedbackType = document.getElementById('feedbackType');
+    if (feedbackType) {
+      for (let i = 0; i < feedbackType.options.length; i++) {
+        if (feedbackType.options[i]._defaultText) {
+          feedbackType.options[i].text = feedbackType.options[i]._defaultText;
+        }
+      }
+    }
+    const submitBtn = document.getElementById('submitFeedback');
+    if (submitBtn && submitBtn._defaultText) submitBtn.innerText = submitBtn._defaultText;
+    const clearBtn = document.getElementById('clearFeedback');
+    if (clearBtn && clearBtn._defaultText) clearBtn.innerText = clearBtn._defaultText;
+    if (scanBtn) {
+      const btnText = scanBtn.querySelector('.btn-text');
+      if (btnText && btnText._defaultText) btnText.innerText = btnText._defaultText;
+    }
   }
-
-  // Update all AI responses in chat window to the selected language
-  const aiBubbles = document.querySelectorAll('.message-bubble.ai');
-  aiBubbles.forEach(bubble => {
-    const bubbleContent = bubble.querySelector('.bubble-content');
-    if (bubbleContent) {
-      const resultMatch = bubbleContent.innerHTML.match(/<strong>(.*?)<\/strong>/);
-      const confidenceMatch = bubbleContent.innerHTML.match(/Confidence: <strong>(.*?)<\/strong>/);
-      const explanationMatch = bubbleContent.innerHTML.match(/<div style="white-space: pre-wrap; line-height:1.5;">([\s\S]*?)<\/div>/);
-      let result = resultMatch ? resultMatch[1] : '';
-      let confidence = confidenceMatch ? confidenceMatch[1] : '';
-      let explanation = explanationMatch ? explanationMatch[1] : '';
-      const isPhishing = result.toLowerCase().includes("phishing");
-      const icon = isPhishing ? "🚨" : "✅";
-      const color = isPhishing ? "#ef4444" : "#10b981";
-      const advice = isPhishing ? translations[lang].phishing_advice : translations[lang].safe_advice;
-      bubbleContent.innerHTML = `
-        <div style="color: ${color}; font-weight: 600;">
-            ${icon} <strong>${result}</strong>
-        </div>
-        <div style="margin-top: 8px; font-size: 0.9rem; opacity: 0.8;">
-            Confidence: <strong>${confidence}</strong>
-        </div>
-        <div id="ai-message">
-            ${advice}
-        </div>
-        ${explanation ? `
-        <div id="ai-explanation">
-            <div id="ai-explanation-title">${translations[lang].why_decision}</div>
-            <div id="ai-explanation-content">${explanation}</div>
-        </div>` : ''}
-      `;
-    }
-  });
 }
+
 
 // Listen for language change
 const langSelect = document.getElementById('languageSelect');
@@ -2229,7 +2266,8 @@ if (langSelect) {
   langSelect.addEventListener('change', function() {
     const lang = this.value;
     localStorage.setItem('surLinkLang', lang);
-    applyTranslations(lang);
+    window.__quizInit = false; // Reset quiz init so it re-initializes after reload
+    window.location.reload();
   });
 }
 
