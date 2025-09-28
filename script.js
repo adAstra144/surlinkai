@@ -32,6 +32,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial padding adjustment
     adjustChatBottomPadding();
 
+    // APIFreeLLM Explanation toggle button logic
+    window.surLinkExplanationsEnabled = true;
+    const toggleBtn = document.getElementById('toggleExplanationBtn');
+    const statusSpan = document.getElementById('explanationStatus');
+    if (toggleBtn && statusSpan) {
+      toggleBtn.addEventListener('click', function() {
+        window.surLinkExplanationsEnabled = !window.surLinkExplanationsEnabled;
+        statusSpan.textContent = window.surLinkExplanationsEnabled ? 'On' : 'Off';
+      });
+    }
+
     // iOS/Android virtual keyboard handling: move input above keyboard
     try {
         if ('visualViewport' in window) {
@@ -323,15 +334,25 @@ function showSection(sectionName) {
             updateStatsDisplay();
             updateProfileUI();
           }
-          if (sectionName === 'status') checkApiStatus();
-      if (sectionName === 'status') {
-        const lang = localStorage.getItem('surLinkLang') || 'en';
-        setTimeout(() => applyTranslations(lang), 0);
-      }
-    if (sectionName === 'status') {
-      const lang = localStorage.getItem('surLinkLang') || 'en';
-      setTimeout(() => applyTranslations(lang), 0);
-    }
+          if (sectionName === 'status') {
+            checkApiStatus();
+            // Attach explanations toggle event listener after loading status section
+            setTimeout(() => {
+              const toggleBtn = document.getElementById('toggleExplanationBtn');
+              const statusSpan = document.getElementById('explanationStatus');
+              if (toggleBtn && statusSpan) {
+                // Use a property on window to persist state
+                if (typeof window.surLinkExplanationsEnabled === 'undefined') window.surLinkExplanationsEnabled = true;
+                statusSpan.textContent = window.surLinkExplanationsEnabled ? 'On' : 'Off';
+                toggleBtn.onclick = function() {
+                  window.surLinkExplanationsEnabled = !window.surLinkExplanationsEnabled;
+                  statusSpan.textContent = window.surLinkExplanationsEnabled ? 'On' : 'Off';
+                };
+              }
+            }, 0);
+            const lang = localStorage.getItem('surLinkLang') || 'en';
+            setTimeout(() => applyTranslations(lang), 0);
+          }
           if (sectionName === 'quiz' && !window.__quizInit) {
             initQuiz();
             window.__quizInit = true;
@@ -353,7 +374,21 @@ function showSection(sectionName) {
       updateStatsDisplay();
       updateProfileUI();
     }
-    if (sectionName === 'status') checkApiStatus();
+    if (sectionName === 'status') {
+      checkApiStatus();
+      setTimeout(() => {
+        const toggleBtn = document.getElementById('toggleExplanationBtn');
+        const statusSpan = document.getElementById('explanationStatus');
+        if (toggleBtn && statusSpan) {
+          if (typeof window.surLinkExplanationsEnabled === 'undefined') window.surLinkExplanationsEnabled = true;
+          statusSpan.textContent = window.surLinkExplanationsEnabled ? 'On' : 'Off';
+          toggleBtn.onclick = function() {
+            window.surLinkExplanationsEnabled = !window.surLinkExplanationsEnabled;
+            statusSpan.textContent = window.surLinkExplanationsEnabled ? 'On' : 'Off';
+          };
+        }
+      }, 0);
+    }
     if (sectionName === 'quiz' && !window.__quizInit) {
       initQuiz();
       window.__quizInit = true;
@@ -1102,6 +1137,11 @@ function displayScanResult(classification, confidence, explanation = null) {
         <span style="opacity:0.8;">Too many users are requesting explanations right now. Please try again later.</span>
       </div>
       `;
+    } else if (explanation === '') {
+      content += `
+      <div id="ai-explanation" class="explanation-placeholder" style="background:rgba(245,158,66,0.08);border-radius:8px;padding:12px 14px 10px 14px;margin-top:10px;">
+        <span style="color:#f59e42;font-weight:600;font-size:1em;letter-spacing:0.01em;">Explanations disabled.</span>
+      </div>`;
     } else {
       content += `
       <div id="ai-explanation">
@@ -1150,48 +1190,53 @@ async function scanMessage() {
     appendMessage(message, "user");
     showTypingIndicator();
 
-    try {
-        // Get classification first
-        const response = await fetch(`${apiUrl}/analyze`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message })
-        });
-
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
+  try {
+    // Get classification first
+    const response = await fetch(`${apiUrl}/analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message })
+    });
         
-        // Show initial result without explanation
-        displayScanResult(data.result, data.confidence);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const data = await response.json();
         
-        // Update stats and history immediately
-        saveToHistory(message, data.result);
-        updateStats(data.result);
+    // Show initial result without explanation
+    displayScanResult(data.result, data.confidence);
         
-        // Get explanation asynchronously
-        try {
-            const explanation = await callExplainerModel(message, data.result);
-            if (explanation) {
-                // Update the result with explanation
-                displayScanResult(data.result, data.confidence, explanation);
-            }
-        } catch (error) {
-            console.log("Explanation service unavailable:", error);
+    // Update stats and history immediately
+    saveToHistory(message, data.result);
+    updateStats(data.result);
+        
+    // Only call explanation if enabled
+    if (window.surLinkExplanationsEnabled) {
+      try {
+        const explanation = await callExplainerModel(message, data.result);
+        if (explanation) {
+          // Update the result with explanation
+          displayScanResult(data.result, data.confidence, explanation);
         }
-        
-    } catch (error) {
-        console.error("Scan Error:", error);
-        removeTypingIndicator();
-        hideProgressBar();
-        appendMessage(`
-            ❌ Connection Error<br>
-            <small>Unable to connect to the AI service. Please check your internet connection and try again.</small>
-        `, "ai");
-    } finally {
-        isScanning = false;
-        scanBtn.disabled = false;
-        scanBtn.innerHTML = '<span class="btn-icon">🔍</span><span class="btn-text">Scan</span>';
+      } catch (error) {
+        console.log("Explanation service unavailable:", error);
+      }
+    } else {
+      // If explanations are off, update result to hide explanation placeholder
+      displayScanResult(data.result, data.confidence, '');
     }
+        
+  } catch (error) {
+    console.error("Scan Error:", error);
+    removeTypingIndicator();
+    hideProgressBar();
+    appendMessage(`
+      ❌ Connection Error<br>
+      <small>Unable to connect to the AI service. Please check your internet connection and try again.</small>
+    `, "ai");
+  } finally {
+    isScanning = false;
+    scanBtn.disabled = false;
+    scanBtn.innerHTML = '<span class="btn-icon">🔍</span><span class="btn-text">Scan</span>';
+  }
 }
 
 // Format the result for display
@@ -1350,27 +1395,176 @@ function initStatsSection() {
     });
   }
 
-  // hook reset button
+  // hook reset button (prevent multiple listeners)
   if (resetBtn) {
-    resetBtn.addEventListener('click', () => {
-      if (!confirm('Reset scan statistics? This cannot be undone.')) return;
-      totalScans = phishingScans = safeScans = 0;
-      saveStats();
-      updateStatsDisplay();
+    resetBtn.replaceWith(resetBtn.cloneNode(true));
+    const newResetBtn = document.getElementById('resetStatsBtn');
+    newResetBtn.addEventListener('click', () => {
+      showAppModal({
+        type: 'reset',
+        onConfirm: () => {
+          totalScans = phishingScans = safeScans = 0;
+          saveStats();
+          updateStatsDisplay();
+          updateProfileUI();
+          // If stats section is not active, update DOM if it exists
+          const totalEl = document.getElementById('totalScans');
+          const phishingEl = document.getElementById('phishingScans');
+          const safeEl = document.getElementById('safeScans');
+          if (totalEl) totalEl.textContent = totalScans;
+          if (phishingEl) phishingEl.textContent = phishingScans;
+          if (safeEl) safeEl.textContent = safeScans;
+          // Force re-initialize the chart for immediate reset
+          const doughnutCanvas = document.getElementById('statsDoughnut');
+          if (doughnutCanvas && typeof Chart !== 'undefined') {
+            if (window.statsChart && typeof window.statsChart.destroy === 'function') {
+              window.statsChart.destroy();
+            }
+            const ctx = doughnutCanvas.getContext('2d');
+            window.statsChart = new Chart(ctx, {
+              type: 'doughnut',
+              data: {
+                labels: ['Phishing', 'Safe'],
+                datasets: [{
+                  data: [0, 0],
+                  backgroundColor: ['#ef4444', '#10b981'],
+                  hoverOffset: 8,
+                  borderWidth: 0
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    callbacks: {
+                      label: function(ctx) {
+                        const v = ctx.raw || 0;
+                        const total = (ctx.dataset.data || []).reduce((a,b)=>a+(b||0),0) || 1;
+                        const pct = Math.round((v / total) * 100);
+                        return `${ctx.label}: ${v} (${pct}%)`;
+                      }
+                    }
+                  }
+                }
+              }
+            });
+          }
+        }
+      });
     });
   }
 
-  // edit profile button (simple inline edit for name)
+  // edit profile button (prevent multiple listeners)
   if (editProfileBtn) {
-    editProfileBtn.addEventListener('click', () => {
+    editProfileBtn.replaceWith(editProfileBtn.cloneNode(true));
+    const newEditProfileBtn = document.getElementById('editProfileBtn');
+    newEditProfileBtn.addEventListener('click', () => {
       const current = getPlayerProfile();
-      const name = prompt('Display name:', current.name || '');
-      if (name !== null) {
-        const profile = Object.assign({}, current, { name: name || 'Guest' });
-        savePlayerProfile(profile);
-      }
+      showAppModal({
+        type: 'editProfile',
+        profile: current,
+        onSave: (profile) => {
+          savePlayerProfile(profile);
+          updateProfileUI();
+        }
+      });
     });
   }
+// === MODAL SYSTEM ===
+function showAppModal(opts) {
+  const modal = document.getElementById('appModal');
+  const title = document.getElementById('modalTitle');
+  const body = document.getElementById('modalBody');
+  const actions = document.getElementById('modalActions');
+  const closeBtn = document.getElementById('modalCloseBtn');
+  let lastActive = document.activeElement;
+
+  // Helper to close modal
+  function closeModal() {
+    modal.classList.add('hidden');
+    document.body.classList.remove('no-scroll');
+    if (lastActive && typeof lastActive.focus === 'function') setTimeout(() => lastActive.focus(), 100);
+    // Remove event listeners
+    document.removeEventListener('keydown', escListener);
+    modal.removeEventListener('mousedown', outsideListener);
+  }
+
+  // ESC key closes modal
+  function escListener(e) {
+    if (e.key === 'Escape') closeModal();
+  }
+  // Click outside modal box closes
+  function outsideListener(e) {
+    if (e.target === modal || e.target.classList.contains('modal-overlay')) closeModal();
+  }
+
+  // Reset content
+  title.textContent = '';
+  body.innerHTML = '';
+  actions.innerHTML = '';
+
+  // Modal content logic
+  if (opts.type === 'reset') {
+    title.textContent = 'Reset Stats';
+    body.innerHTML = '<p>Are you sure you want to reset all stats?</p>';
+    actions.innerHTML = `
+      <button class="scan-btn danger" id="modalConfirmBtn">Reset</button>
+      <button class="scan-btn cancel" id="modalCancelBtn">Cancel</button>
+    `;
+    setTimeout(() => document.getElementById('modalConfirmBtn').focus(), 50);
+    document.getElementById('modalConfirmBtn').onclick = () => {
+      if (opts.onConfirm) opts.onConfirm();
+      closeModal();
+    };
+    document.getElementById('modalCancelBtn').onclick = closeModal;
+  } else if (opts.type === 'editProfile') {
+    title.textContent = 'Edit Profile';
+    const p = opts.profile || {};
+    body.innerHTML = `
+      <form id="editProfileForm" autocomplete="off">
+        <label for="modalProfileName">Display Name</label>
+        <input id="modalProfileName" name="name" type="text" maxlength="24" value="${p.name ? String(p.name).replace(/"/g, '&quot;') : ''}" autocomplete="off" required>
+      </form>
+    `;
+    actions.innerHTML = `
+      <button class="scan-btn save" id="modalSaveBtn">Save</button>
+      <button class="scan-btn cancel" id="modalCancelBtn">Cancel</button>
+    `;
+    setTimeout(() => document.getElementById('modalProfileName').focus(), 50);
+    // Prevent form submission from reloading the page
+    const form = document.getElementById('editProfileForm');
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        document.getElementById('modalSaveBtn').click();
+      });
+    }
+    document.getElementById('modalSaveBtn').onclick = (e) => {
+      e.preventDefault();
+      const name = document.getElementById('modalProfileName').value.trim() || 'Guest';
+      if (opts.onSave) opts.onSave(Object.assign({}, p, { name }));
+      closeModal();
+    };
+    document.getElementById('modalCancelBtn').onclick = closeModal;
+  }
+
+  // Show modal
+  modal.classList.remove('hidden');
+  document.body.classList.add('no-scroll');
+  // Trap focus
+  setTimeout(() => {
+    const firstInput = modal.querySelector('input, button, select, textarea');
+    if (firstInput) firstInput.focus();
+  }, 50);
+  // Close btn
+  closeBtn.onclick = closeModal;
+  // ESC and outside click
+  document.addEventListener('keydown', escListener);
+  modal.addEventListener('mousedown', outsideListener);
+}
 
   // initial render
   updateStatsDisplay();

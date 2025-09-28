@@ -9,11 +9,16 @@
                 </div>
             </div>
             <div class="api-status-box" id="explainerStatusBox" style="flex:1; min-width:220px; background:var(--glass); border-radius:12px; padding:18px 16px; display:flex; align-items:center; gap:14px; border:1px solid rgba(139,92,246,0.08);">
-                <span class="status-indicator" id="explainerStatusIndicator" role="status" aria-live="polite">●</span>
-                <div>
-                    <div style="font-weight:600; font-size:1.08rem;">Explainer</div>
-                    <div class="status-text" id="explainerStatusText" data-i18n="checking">Checking...</div>
-                </div>
+                                <span class="status-indicator" id="explainerStatusIndicator" role="status" aria-live="polite">●</span>
+                                <div style="flex:1;">
+                                                                                                                                                                                                                                                <div style="font-weight:600; font-size:1.08rem; display:flex; align-items:center; min-height:32px; justify-content:space-between;">
+                                                                                                                                                                                                                                                        <span style="display:flex;align-items:center;">Explainer</span>
+                                                                                                                                                                                                                                                        <button id="toggleExplanationBtn" class="scan-btn outline" style="display:flex;align-items:center;justify-content:center;padding:8px 16px;font-size:1em;min-width:90px;">
+                                                                                                                                                                                                                                                            🧠 <span id="explanationStatus">On</span>
+                                                                                                                                                                                                                                                        </button>
+                                                                                                                                                                                                                                                </div>
+                                        <div class="status-text" id="explainerStatusText" data-i18n="checking">Checking...</div>
+                                </div>
             </div>
         </div>
 </div>
