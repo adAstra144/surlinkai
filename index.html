@@ -18,6 +18,9 @@
       navigator.serviceWorker.register("/service-worker.js");
     }
   </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
   
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -68,8 +71,8 @@
             <span class="nav-text" data-i18n="statistics">Statistics</span>
           </button>
           <button class="nav-btn" data-section="quiz" onclick="showSection('quiz')">
-            <span class="nav-icon">🧠</span>
-            <span class="nav-text" data-i18n="quiz">Quiz</span>
+            <span class="nav-icon">🕹️</span>
+            <span class="nav-text" data-i18n="quiz">Gamified Quiz</span>
           </button>
           <button class="nav-btn" data-section="status" onclick="showSection('status')">
             <span class="nav-icon">🤖</span>
@@ -191,25 +194,79 @@
       <div id="statusMainSection" class="content-section" data-lazy="true">
       </div>
 
-      <!-- Quiz (Main) -->
-      <div id="quizMainSection" class="content-section">
-        <div class="content-scroll">
-    <h3 style="margin-bottom:12px;" data-i18n="quiz">Phishing Awareness Quiz</h3>
-    <div class="quiz-card">
-        <div class="quiz-top">
-            <div id="quizProgress" class="quiz-progress" aria-live="polite">Question 1 of 3</div>
-            <div id="quizScore" class="quiz-score">Score: 0</div>
-        </div>
-        <div id="quizQuestion" class="quiz-question"></div>
-        <div id="quizAnswers" class="quiz-answers"></div>
-        <div id="quizFeedback" class="quiz-feedback" aria-live="polite"></div>
-        <div class="quiz-controls">
-            <button id="quizNextBtn" class="scan-btn" style="display:none;">Next Question</button>
-            <button id="quizRestartBtn" class="scan-btn outline" style="display:none;">Restart Quiz</button>
-        </div>
-    </div>
+
+
+<!-- Quiz (Main) -->
+<div id="quizMainSection" class="content-section">
+  <div class="content-scroll">
+    <div class="quiz-banner">
+  <h1>🛡️ Cyber Defender</h1>
+  <p>Beat the phishing attacks. Gain XP. Unlock badges.</p>
 </div>
+
+    <!-- STEP 1: WELCOME SCREEN -->
+   <div id="quizWelcome" class="quiz-card">
+  <h2>🎮 Welcome, Agent!</h2>
+  <p>
+    Your mission: Identify phishing threats and secure cyberspace.  
+    Earn <span class="quiz-xp">XP</span>, build streaks, and unlock badges.
+  </p>
+  <div class="quiz-actions" style="justify-content:center; margin-top:18px;">
+    <button id="quizStartBtn" class="scan-btn start-btn">▶️ Start Game</button>
+    
+  </div>
+</div>
+
+    <!-- STEP 2: DIFFICULTY SELECTION (hidden until Start pressed) -->
+<div id="quizDifficulty" class="quiz-card" style="display:none;">
+  <h2>Choose Your Challenge ⚔️</h2>
+  <p style="margin-bottom:14px;">Pick a mode to test your skills:</p>
+  <div class="quiz-mode-grid">
+    <button class="quiz-difficulty" data-mode="easy">🌱 Easy<br><span>Learn the basics</span></button>
+    <button class="quiz-difficulty" data-mode="medium">🔥 Medium<br><span>Ready for more?</span></button>
+    <button class="quiz-difficulty" data-mode="hard">💀 Hard<br><span>For experts only</span></button>
+    <button class="quiz-difficulty" data-mode="endless">♾️ Endless<br><span>Survive as long as you can</span></button>
+  </div>
+</div>
+
+    <!-- STEP 3: QUIZ GAME UI -->
+    <div id="quizContainer" class="quiz-card" style="display:none;">
+      <div class="quiz-top">
+        <div class="quiz-left">
+          <div class="quiz-progress-bar" aria-hidden="true">
+            <div class="quiz-progress-fill" id="quizProgressFill" style="width:0%"></div>
+          </div>
+          <div class="quiz-meta">
+            <span id="quizProgress" class="quiz-progress-text">Question 1</span>
+            <span id="quizScore" class="quiz-score">Score: 0</span>
+            <span id="quizLevel" class="quiz-level">Lvl 0</span>
+            <span id="quizXP" class="quiz-xp">XP: 0 / 50</span>
+          </div>
+        </div>
+
+        <div class="quiz-right">
+          <div id="quizLives" class="quiz-lives" aria-live="polite">❤️❤️❤️</div>
+          <div id="quizStreak">🔥 0 | 🏆 Best: 0</div>
+          <div id="quizTimer" class="quiz-timer" role="status" aria-live="polite">20s</div>
+        </div>
       </div>
+
+      <div id="quizQuestion" class="quiz-question"></div>
+      <div id="quizAnswers" class="quiz-answers"></div>
+      <div id="quizFeedback" class="quiz-feedback" aria-live="polite"></div>
+
+<div class="quiz-actions" style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end;">
+  <button id="quizQuitBtn" class="scan-btn outline">Quit</button>
+  <button id="quizRestartBtn" class="scan-btn outline" style="display:none;">Restart</button>
+</div>
+
+      <!-- Badge (hidden until end) -->
+      <div id="quizBadge" style="display:none;margin-top:12px;font-weight:600;color:#c7b3ff;"></div>
+    </div>
+  </div>
+</div>
+
+
 
    <!-- Feedback (Main) -->
 <div id="feedbackMainSection" class="content-section" data-lazy="true">
@@ -284,6 +341,7 @@
   });
 </script>
   
+  <script src="questions.js"></script>
   <script src="https://apifreellm.com/apifree.min.js"></script>
   <script src="script.js" defer></script>
   <script src="onboarding.js" defer></script>

@@ -1,21 +1,66 @@
+
 <div class="content-scroll">
-    <h3 style="margin-bottom:12px;" data-i18n="scan_statistics">Scan Statistics</h3>
-    <div class="stats-grid">
-    <div class="stat-item">
-        <span class="stat-number" id="totalScans">0</span>
-        <span class="stat-label" data-i18n="total_scans">Total Scans</span>
+    <h3 style="margin-bottom:12px;">Scan Statistics</h3>
+
+    <div class="stats-grid" style="display:grid; grid-template-columns: 1fr 340px; gap:16px; align-items:start;">
+      <!-- Left: scan metrics + chart -->
+      <div class="stats-left" style="display:flex;flex-direction:column;gap:12px;">
+        <div class="stats-grid-cards" style="display:flex;gap:12px;flex-wrap:wrap;">
+          <div class="stat-item" style="flex:1 1 140px;padding:12px;border-radius:12px;background:var(--glass);border:1px solid rgba(139,92,246,0.08);">
+            <div class="stat-number" id="totalScans">0</div>
+            <div class="stat-label">Total Scans</div>
+          </div>
+          <div class="stat-item" style="flex:1 1 140px;padding:12px;border-radius:12px;background:var(--glass);border:1px solid rgba(139,92,246,0.08);">
+            <div class="stat-number" id="phishingScans">0</div>
+            <div class="stat-label">Phishing Detected</div>
+          </div>
+          <div class="stat-item" style="flex:1 1 140px;padding:12px;border-radius:12px;background:var(--glass);border:1px solid rgba(139,92,246,0.08);">
+            <div class="stat-number" id="safeScans">0</div>
+            <div class="stat-label">Safe Messages</div>
+          </div>
+        </div>
+
+        <!-- Chart card -->
+        <div class="chart-card" style="padding:12px;border-radius:12px;background:var(--glass);border:1px solid rgba(139,92,246,0.08); display:flex; gap:12px; align-items:center;">
+          <div style="width:160px; height:160px; position:relative;">
+            <canvas id="statsDoughnut" width="160" height="160" aria-label="Scans breakdown chart" role="img"></canvas>
+          </div>
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:1rem; color:var(--muted)">Phishing vs Safe</div>
+            <div id="chartLegend" style="margin-top:8px; font-size:0.95rem; color:var(--muted)"></div>
+            <div style="margin-top:12px;">
+              <button id="resetStatsBtn" class="scan-btn outline" style="padding:8px 10px;">Reset Stats</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Player Profile -->
+<aside class="stats-profile">
+  <div class="player-profile">
+    <div id="playerAvatar" class="player-avatar">G</div>
+    <div class="player-info">
+      <div class="player-header">
+        <span id="playerName">Guest</span>
+        <span id="profileLevel" class="quiz-level">Lvl 1</span>
+      </div>
+      <div class="player-xp">
+        <span id="profileXP" class="quiz-xp">XP: 0 / 50</span>
+        <div class="xp-bar"><div id="profileXPbarFill"></div></div>
+      </div>
+      <div class="player-footer">
+        <span id="playerBadge">Novice Learner 🐣</span>
+        <button id="editProfileBtn" class="scan-btn outline">Edit</button>
+      </div>
     </div>
-    <div class="stat-item">
-        <span class="stat-number" id="phishingScans">0</span>
-        <span class="stat-label" data-i18n="phishing_detected">Phishing Detected</span>
-    </div>
-    <div class="stat-item">
-        <span class="stat-number" id="safeScans">0</span>
-        <span class="stat-label" data-i18n="safe_messages">Safe Messages</span>
+  </div>
+  <div class="player-summary">
+    <h4>Player Summary</h4>
+    <p>Best Streak: <strong id="playerBestStreak">0</strong></p>
+    <p>Games Played: <strong id="playerGames">0</strong></p>
+  </div>  
+</aside>
+
         
     </div>
-    </div>
-    <div class="chart-container">
-    <canvas id="scanChart"></canvas>
-    </div>
-</div>
+  </div>

@@ -314,20 +314,25 @@ function showSection(sectionName) {
                 return res.text();
             })
             .then(html => {
-                sectionEl.innerHTML = html;
-                sectionEl.dataset.loaded = "true";
+        sectionEl.innerHTML = html;
+        sectionEl.dataset.loaded = "true";
 
-                // Wait for next tick to ensure DOM is updated
-                setTimeout(() => {
-                    // Special initialization after content is loaded
-                    if (sectionName === 'stats') loadStats();
-                    if (sectionName === 'status') checkApiStatus();
-                    if (sectionName === 'quiz' && !window.__quizInit) {
-                        initQuiz();
-                        window.__quizInit = true;
-                    }
-                    if (sectionName === 'feedback') initFeedback(); // if needed
-                }, 0);
+        // Wait for next tick to ensure DOM is updated
+        setTimeout(() => {
+          // Special initialization after content is loaded
+          if (sectionName === 'stats') {
+            loadStats();
+            initStatsSection();
+            updateStatsDisplay();
+            updateProfileUI();
+          }
+          if (sectionName === 'status') checkApiStatus();
+          if (sectionName === 'quiz' && !window.__quizInit) {
+            initQuiz();
+            window.__quizInit = true;
+          }
+          if (sectionName === 'feedback') initFeedback(); // if needed
+        }, 0);
             })
             .catch(err => console.error(`Failed to load ${sectionName}:`, err));
     } else {
@@ -359,159 +364,530 @@ function showSection(sectionName) {
 }
 
 
+
 // ---------- REPLACE initQuiz() WITH THIS ----------
+// Robust quiz initializer — safe to paste into script.js
+let activeIntervals = [];
+
 function initQuiz() {
-    console.log('Initializing quiz...');
-    const quizSection = document.getElementById('quizMainSection');
-    
-    if (!quizSection) {
-        console.warn('Quiz section not found');
-        // Retry initialization once after a short delay
-        setTimeout(() => {
-            const retrySection = document.getElementById('quizMainSection');
-            if (retrySection) {
-                console.log('Quiz section found on retry, initializing...');
-                initQuizContent(retrySection);
-            } else {
-                console.error('Quiz section still not found after retry');
-            }
-        }, 100);
-        return;
-    }
-    
-    initQuizContent(quizSection);
-}
+  // idempotent init
+  if (window.__surlinkQuizInit) return;
+  window.__surlinkQuizInit = true;
 
-function initQuizContent(quizSection) {
-
-    const questions = [
-        { q: 'Which of the following is a sign of a phishing email?', a: [
-            { text: 'An email from a known contact asking for a file', correct: false },
-            { text: 'Grammatical errors and suspicious links', correct: true },
-            { text: 'A secure website address (https://)', correct: false },
-            { text: 'A welcome email from a trusted service', correct: false }
-        ] },
-        { q: 'What should you do if a message asks for your password?', a: [
-            { text: 'Reply immediately with your password', correct: false },
-            { text: 'Verify the source before responding', correct: true },
-            { text: 'Ignore all emails from your company', correct: false },
-            { text: 'Click the link and change your password', correct: false }
-        ] },
-        { q: 'What is a phishing attack?', a: [
-            { text: 'A fishing technique used in rivers', correct: false },
-            { text: 'A way to steal personal information via fake messages', correct: true },
-            { text: 'A password recovery method', correct: false },
-            { text: 'An antivirus scanning process', correct: false }
-        ] }
+function getNextQuestion() {
+  if (endlessMode) {
+    const pools = [
+      ...questionBank.easy,
+      ...questionBank.medium,
+      ...questionBank.hard
     ];
-
-    // Query all elements inside the lazy-loaded section
-    const quizProgress = quizSection.querySelector('#quizProgress');
-    const quizScoreEl = quizSection.querySelector('#quizScore');
-    const quizQuestion = quizSection.querySelector('#quizQuestion');
-    const quizAnswers = quizSection.querySelector('#quizAnswers');
-    const quizFeedback = quizSection.querySelector('#quizFeedback');
-    const quizNextBtn = quizSection.querySelector('#quizNextBtn');
-    const quizRestartBtn = quizSection.querySelector('#quizRestartBtn');
-
-    if (!quizProgress || !quizScoreEl || !quizQuestion || !quizAnswers) {
-        console.warn('Missing required quiz elements:', {
-            progress: !!quizProgress,
-            score: !!quizScoreEl,
-            question: !!quizQuestion,
-            answers: !!quizAnswers
-        });
-        return;
-    }
-
-    console.log('Quiz elements found, initializing game state...');
-    let idx = 0;
-    let score = 0;
-    let autoTimer = 0;
-    const AUTO_NEXT_DELAY = 1200;
-
-    // Load best score from localStorage
-    let bestPercent = parseInt(localStorage.getItem('surLinkBestQuiz') || '0', 10);
-
-    function render() {
-        if (autoTimer) { clearTimeout(autoTimer); autoTimer = 0; }
-        quizProgress.textContent = `Question ${idx + 1} of ${questions.length}`;
-        quizScoreEl.textContent = `Score: ${score}`;
-        quizQuestion.textContent = questions[idx].q;
-        quizAnswers.innerHTML = '';
-        quizFeedback.textContent = '';
-        quizNextBtn.disabled = true;
-        quizNextBtn.style.display = 'none';
-        quizRestartBtn.style.display = 'none';
-
-        questions[idx].a.forEach(ans => {
-            const btn = document.createElement('button');
-            btn.className = 'quiz-answer';
-            btn.textContent = ans.text;
-            btn.addEventListener('click', () => selectAnswer(btn, ans.correct));
-            quizAnswers.appendChild(btn);
-        });
-    }
-
-    function selectAnswer(btn, correct) {
-        Array.from(quizAnswers.children).forEach(b => b.disabled = true);
-        if (correct) {
-            score++;
-            btn.classList.add('correct');
-            quizFeedback.textContent = '✅ Correct!';
-        } else {
-            btn.classList.add('incorrect');
-            const correctText = questions[idx].a.find(a => a.correct).text;
-            quizFeedback.textContent = `❌ Not quite. Correct: ${correctText}`;
-        }
-        quizScoreEl.textContent = `Score: ${score}`;
-        autoTimer = setTimeout(proceed, AUTO_NEXT_DELAY);
-    }
-
-    function proceed() {
-        if (idx < questions.length - 1) {
-            idx++;
-            render();
-        } else {
-            finishQuiz();
-        }
-    }
-
-    function finishQuiz() {
-        const percent = Math.round((score / questions.length) * 100);
-        quizQuestion.textContent = `You scored ${score} / ${questions.length} (${percent}%)!`;
-        quizAnswers.innerHTML = '';
-        quizFeedback.textContent = percent >= 70 ? '🎉 Nice — you passed!' : '🔎 Review the tips to improve.';
-        quizNextBtn.style.display = 'none';
-        quizRestartBtn.style.display = 'inline-flex';
-
-        if (percent > bestPercent) {
-            bestPercent = percent;
-            localStorage.setItem('surLinkBestQuiz', String(bestPercent));
-            showBestQuizStat(bestPercent);
-        }
-    }
-
-    function showBestQuizStat(best) {
-        const statsGrid = document.querySelector('.stats-grid');
-        if (!statsGrid) return;
-        let bestEl = document.getElementById('bestQuizStat');
-        if (!bestEl) {
-            const div = document.createElement('div');
-            div.className = 'stat-item';
-            div.innerHTML = `<span class="stat-number" id="bestQuizStat">${best}%</span><span class="stat-label">Best Quiz</span>`;
-            statsGrid.appendChild(div);
-        } else {
-            bestEl.textContent = `${best}%`;
-        }
-    }
-
-    quizNextBtn.addEventListener('click', () => { clearTimeout(autoTimer); proceed(); });
-    quizRestartBtn.addEventListener('click', () => { idx = 0; score = 0; quizNextBtn.style.display = 'inline-flex'; quizRestartBtn.style.display = 'none'; render(); });
-
-    render();
-    if (bestPercent > 0) showBestQuizStat(bestPercent);
+    return pools[Math.floor(Math.random() * pools.length)];
+  }
+  const pool = questionBank[difficulty] || questionBank.medium;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
+ 
+ 
+
+  // --- Elements (grab once; later code checks exist) ---
+  const quizWelcome = document.getElementById('quizWelcome');
+  const quizDifficulty = document.getElementById('quizDifficulty');
+  const quizContainer = document.getElementById('quizContainer');
+
+  const quizProgress = document.getElementById('quizProgress');
+  const quizProgressFill = document.getElementById('quizProgressFill');
+  const quizScoreEl = document.getElementById('quizScore');
+  const quizQuestion = document.getElementById('quizQuestion');
+  const quizAnswers = document.getElementById('quizAnswers');
+  const quizFeedback = document.getElementById('quizFeedback');
+  const quizNextBtn = document.getElementById('quizNextBtn');
+  const quizRestartBtn = document.getElementById('quizRestartBtn');
+  const quizLivesEl = document.getElementById('quizLives');
+  const quizLevelEl = document.getElementById('quizLevel');
+const quizXPEl = document.getElementById('quizXP');
+
+// If you have a separate stats panel somewhere:
+const statsLevelEl = document.getElementById('statsLevel');
+const statsBadgeEl = document.getElementById('statsBadge');
+  const quizBadge = document.getElementById('quizBadge');
+  const quizTimerEl = document.getElementById('quizTimer');
+  const quizStreakEl = document.getElementById('quizStreak');
+
+  // Defensive: warn if important pieces are missing
+  if (!quizQuestion || !quizAnswers) {
+    console.warn("Quiz init: essential elements missing. Check IDs: quizQuestion, quizAnswers.");
+  }
+  if (!quizWelcome) console.warn("Quiz init: 'quizWelcome' missing.");
+  if (!quizStartBtnExists() && !document.querySelector('#quizStartBtn')) {
+    // if there is not an actual start button element yet - delegation still handles clicks.
+    // no hard failure — just warning
+    console.warn("Quiz init: '#quizStartBtn' not found. Make sure there is a button with id='quizStartBtn'.");
+  }
+
+  // --- Config & state ---
+  const AUTO_NEXT_DELAY = 1200;
+  const LOW_TIME_THRESHOLD = 6;
+
+// --- State ---
+let idx = 0, score = 0, lives = 3;
+// keep track of previous lives so we can animate differences
+let prevLives = lives;
+
+// keep ref to a pulse animation so we can cancel it when needed
+let livesPulseAnim = null;
+let xp = 0, level = 1, xpToNext = 50; // base threshold
+let answered = false;
+let autoNextTimeout = null;
+let streak = 0, bestStreak = 0;
+let difficulty = null;
+let endlessMode = false;
+let currentQuestion = null;
+
+
+
+
+// --- XP & Level handling ---
+function addXP(amount) {
+  xp += amount;
+
+  if (quizXPEl) {
+    quizXPEl.classList.add("xp-glow");
+    setTimeout(() => quizXPEl.classList.remove("xp-glow"), 800);
+  }
+
+  while (xp >= xpToNext) {
+    xp -= xpToNext;
+    level++;
+    xpToNext = Math.floor(xpToNext * 1.3);
+
+    if (quizLevelEl) {
+      quizLevelEl.classList.add("level-up");
+      setTimeout(() => quizLevelEl.classList.remove("level-up"), 800);
+    }
+
+    triggerConfetti();
+    playSound("levelUp");
+  }
+
+  updateScoreUI(true); 
+  
+}
+
+  // --- Helpers ---
+  function quizStartBtnExists(){ return !!document.getElementById('quizStartBtn'); }
+
+  function clearTimers() {
+    activeIntervals.forEach(id => clearInterval(id));
+    activeIntervals = [];
+    if (autoNextTimeout !== null) {
+      clearTimeout(autoNextTimeout);
+      autoNextTimeout = null;
+    }
+  }
+
+  function getTimerForDifficulty() {
+    if (difficulty === "easy") return 25;
+    if (difficulty === "medium") return 20;
+    if (difficulty === "hard") return 15;
+    if (endlessMode) return 18;
+    return 20;
+  }
+
+  function getNextQuestion() {
+    if (endlessMode) {
+      const pools = [...questionBank.easy, ...questionBank.medium, ...questionBank.hard];
+      return pools[Math.floor(Math.random() * pools.length)];
+    }
+    const pool = questionBank[difficulty] || questionBank.medium;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+ // --- UI updates (guarded) ---
+function updateProgressUI() {
+  if (!quizProgress || !quizProgressFill) return;
+
+  if (endlessMode) {
+    quizProgress.textContent = `Question ${idx + 1} (Endless)`;
+    quizProgressFill.style.width = "100%"; // fixed bar for endless
+  } else {
+    const total = questionBank[difficulty] ? questionBank[difficulty].length : 1;
+    quizProgress.textContent = `Question ${idx + 1} / ${total}`;
+    const percent = Math.round(((idx + 1) / total) * 100);
+    quizProgressFill.style.width = `${percent}%`;
+  }
+}
+
+// --- Update UI ---
+function updateScoreUI(bump = false) {
+  if (quizScoreEl) quizScoreEl.textContent = `Score: ${score}`;
+  if (quizLevelEl) quizLevelEl.textContent = `Lvl ${level}`;
+  if (quizXPEl) quizXPEl.textContent = `XP: ${xp} / ${xpToNext}`;
+
+  if (bump) {
+    [quizScoreEl, quizLevelEl, quizXPEl].forEach(el => {
+      if (!el) return;
+      el.classList.remove('bump');
+      void el.offsetWidth;
+      el.classList.add('bump');
+    });
+  }
+}
+
+  function updateLivesUI() {
+  if (!quizLivesEl) return;
+
+  const maxLives = 3; // or make configurable
+  quizLivesEl.innerHTML = '';
+
+  for (let i = 0; i < maxLives; i++) {
+    const span = document.createElement('span');
+    span.className = 'heart ' + (i < lives ? 'full' : 'empty');
+    quizLivesEl.appendChild(span);
+  }
+
+  // Animate life lost
+  if (prevLives > lives) {
+    const lostHeart = quizLivesEl.querySelectorAll('.heart')[lives];
+    if (lostHeart) {
+      lostHeart.animate([
+        { transform: 'scale(1)', opacity: 1 },
+        { transform: 'scale(0.2)', opacity: 0 }
+      ], { duration: 500, easing: 'ease-out' });
+      // playSound('lifeLost'); // Removed as requested
+    }
+  }
+
+  // Animate life gained
+  if (prevLives < lives) {
+    const newHeart = quizLivesEl.querySelectorAll('.heart')[lives - 1];
+    if (newHeart) {
+      newHeart.animate([
+        { transform: 'scale(0.2)', opacity: 0 },
+        { transform: 'scale(1.3)', opacity: 1 },
+        { transform: 'scale(1)', opacity: 1 }
+      ], { duration: 500, easing: 'cubic-bezier(.2,.9,.3,1)' });
+      playSound('correct'); // or a dedicated heal sound
+    }
+  }
+
+  // Pulse when in danger (only 1 life left)
+  quizLivesEl.querySelectorAll('.heart').forEach((h, i) => {
+    h.classList.remove('danger');
+    if (lives === 1 && i === 0) h.classList.add('danger');
+  });
+
+  prevLives = lives;
+}
+
+  function updateStreakUI(bump = false) {
+    if (!quizStreakEl) return;
+    quizStreakEl.textContent = `🔥 ${streak} | 🏆 Best: ${bestStreak} ${endlessMode ? "| ♾️ Endless" : ""}`;
+    if (bump) {
+      quizStreakEl.classList.remove('bump');
+      void quizStreakEl.offsetWidth;
+      quizStreakEl.classList.add('bump');
+    }
+  }
+
+  function setTimerDisplay(s) {
+    if (!quizTimerEl) return;
+    quizTimerEl.textContent = `${s}s`;
+    quizTimerEl.classList.remove('warn','zero');
+    if (s <= 0) quizTimerEl.classList.add('zero');
+    else if (s <= LOW_TIME_THRESHOLD) quizTimerEl.classList.add('warn');
+  }
+
+  // --- Timer (uses activeIntervals[]) ---
+  function startTimer(currentIdx) {
+    clearTimers();
+    let timeLeft = getTimerForDifficulty();
+    setTimerDisplay(timeLeft);
+
+    const myIdx = currentIdx;
+    const intervalId = setInterval(() => {
+      // if we've moved to another question, stop this interval
+      if (idx !== myIdx) {
+        clearTimers();
+        return;
+      }
+      timeLeft -= 1;
+      setTimerDisplay(timeLeft);
+      if (timeLeft <= 0) {
+        clearTimers();
+        onTimeUp();
+      }
+    }, 1000);
+
+    activeIntervals.push(intervalId);
+  }
+
+  // --- Quiz flow ---
+  function revealCorrectAnswer() {
+    if (!currentQuestion || !quizAnswers) return;
+    Array.from(quizAnswers.children).forEach(btn => {
+      const txt = (btn.textContent || '').trim();
+      const matching = currentQuestion.a.find(a => a.text === txt);
+      if (matching && matching.correct) btn.classList.add('correct');
+    });
+  }
+
+  function onTimeUp() {
+    if (answered) return;
+    answered = true;
+    clearTimers();
+    if (quizAnswers) Array.from(quizAnswers.children).forEach(b => b.disabled = true);
+    revealCorrectAnswer();
+    lives = Math.max(0, lives - 1);
+    streak = 0;
+    if (quizFeedback) quizFeedback.textContent = `⏱️ Time's up! You lost a life.`;
+    updateLivesUI();
+    updateStreakUI();
+
+    autoNextTimeout = setTimeout(() => {
+      if (lives <= 0) finishQuiz(false);
+      else { idx++; render(); }
+    }, AUTO_NEXT_DELAY);
+  }
+
+  function selectAnswer(btn, correct) {
+    if (answered) return;
+    answered = true;
+    clearTimers();
+    if (quizAnswers) Array.from(quizAnswers.children).forEach(b => b.disabled = true);
+
+    if (correct) {
+      score++;
+      addXP(10);
+      streak++;
+      if (streak > bestStreak) bestStreak = streak;
+      btn.classList.add('correct');
+      if (quizFeedback) quizFeedback.textContent = '✅ Correct!';
+      updateStreakUI(true);
+      playSound('correct');
+    } else {
+      streak = 0;
+      btn.classList.add('incorrect');
+      revealCorrectAnswer();
+      lives = Math.max(0, lives - 1);
+      if (quizFeedback) quizFeedback.textContent = '❌ Wrong!';
+      updateStreakUI();
+      playSound('wrong');
+    }
+
+    updateLivesUI();
+    updateScoreUI(true);
+
+    autoNextTimeout = setTimeout(() => {
+      if (lives <= 0) finishQuiz(false);
+      else { idx++; render(); }
+    }, AUTO_NEXT_DELAY);
+  }
+
+const badgeLevels = [
+  { minLevel: 1, name: "Novice Learner 🐣" },
+  { minLevel: 3, name: "Phishing Hunter 🕵️" },
+  { minLevel: 5, name: "Cyber Guardian 🛡️" },
+  { minLevel: 8, name: "Security Master 🔒" },
+  { minLevel: 10, name: "Cyber Sentinel 👑" }
+];
+
+function triggerConfetti() {
+  confetti({
+    particleCount: 80,
+    spread: 70,
+    origin: { y: 0.6 }
+  });
+}
+
+const sounds = {
+  correct: new Audio("sounds/correct.mp3"),
+  wrong: new Audio("sounds/wrong.mp3"),
+  levelUp: new Audio("sounds/level-up.mp3"),
+};
+
+function playSound(name) {
+  if (sounds[name]) {
+    sounds[name].currentTime = 0;
+    sounds[name].play().catch(() => {}); // prevent autoplay issues
+  }
+}
+
+function getBadgeForLevel(level) {
+  let earned = badgeLevels[0].name;
+  for (const b of badgeLevels) {
+    if (level >= b.minLevel) earned = b.name;
+  }
+  return earned;
+}
+
+// Quit button
+document.addEventListener('click', function (ev) {
+  const btn = ev.target.closest('button');
+  if (!btn) return;
+
+  if (btn.matches('#quizQuitBtn')) {
+    ev.preventDefault();
+    clearTimers();
+    finishQuiz(false, true); // treat as quit
+  }
+});
+
+function finishQuiz(won = true, quit = false) {
+  clearTimers();
+  if (quizAnswers) quizAnswers.innerHTML = '';
+  if (quizNextBtn) quizNextBtn.style.display = 'none';
+  if (quizRestartBtn) quizRestartBtn.style.display = 'none'; // handled below
+  if (quizQuitBtn) quizQuitBtn.style.display = 'none';
+
+  const badge = getBadgeForLevel(level);
+
+  // Title logic
+  let title = won ? "🏆 Mission Complete!" : "💀 Game Over";
+  if (quit) title = "🚪 You quit the game";
+
+  // Build results card
+  let resultHTML = `
+    <div class="quiz-result-card">
+      <h2 class="result-title">${title}</h2>
+      <div class="result-stats">
+        <div><strong>📊 Score:</strong> ${score}</div>
+        <div><strong>⭐ XP:</strong> ${xp}</div>
+        <div><strong>🏅 Badge:</strong> ${badge}</div>
+        <div><strong>🔥 Best Streak:</strong> ${bestStreak}</div>
+      </div>
+      <div class="quiz-actions" style="margin-top:16px;display:flex;gap:10px;justify-content:center;">
+        <button id="resultsRestartBtn" class="scan-btn">🔄 Play Again</button>
+        <button id="resultsMenuBtn" class="scan-btn outline">🏠 Main Menu</button>
+      </div>
+    </div>
+  `;
+
+  if (quizQuestion) quizQuestion.innerHTML = resultHTML;
+  if (quizFeedback) quizFeedback.textContent = '';
+  if (quizBadge) quizBadge.style.display = 'none';
+
+  // Button handlers
+  const restartBtn = document.getElementById('resultsRestartBtn');
+  const menuBtn = document.getElementById('resultsMenuBtn');
+
+
+  if (restartBtn) {
+    restartBtn.addEventListener('click', () => {
+  idx = 0; score = 0; xp = 0; lives = 3; prevLives = lives; streak = 0; bestStreak = 0;
+      render();
+    });
+  }
+
+  if (menuBtn) {
+    menuBtn.addEventListener('click', () => {
+      if (quizContainer) quizContainer.style.display = 'none';
+      if (quizWelcome) quizWelcome.style.display = 'block';      
+    });
+  }
+}
+
+function render() {
+  clearTimers();
+  answered = false;
+
+  if (quizQuitBtn) quizQuitBtn.style.display = 'inline-flex'; // <— restore Quit here
+
+  if (quizAnswers) quizAnswers.innerHTML = '';
+  if (quizFeedback) quizFeedback.textContent = '';
+  if (quizNextBtn) { quizNextBtn.disabled = true; quizNextBtn.style.display = 'inline-flex'; }
+  if (quizRestartBtn) quizRestartBtn.style.display = 'none';
+  if (quizBadge) quizBadge.style.display = 'none';
+
+  updateProgressUI();
+  updateLivesUI();
+  updateScoreUI(false);
+  updateStreakUI(false);
+
+  currentQuestion = getNextQuestion();
+  if (quizQuestion) quizQuestion.textContent = currentQuestion.q;
+
+  currentQuestion.a.forEach((ans) => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-answer';
+    btn.type = 'button';
+    btn.textContent = ans.text;
+    btn.addEventListener('click', () => selectAnswer(btn, ans.correct));
+    if (quizAnswers) quizAnswers.appendChild(btn);
+  });
+
+  startTimer(idx);
+}
+
+  // --- Global event delegation so element timing doesn't break click handlers ---
+  document.addEventListener('click', function (ev) {
+    const btn = ev.target.closest('button, .quiz-difficulty');
+    if (!btn) return;
+
+    // Start -> show difficulty selection
+    if (btn.matches('#quizStartBtn')) {
+      ev.preventDefault();
+      if (quizWelcome) quizWelcome.style.display = 'none';
+      if (quizDifficulty) quizDifficulty.style.display = 'block';
+      if (quizContainer) quizContainer.style.display = 'none';
+      return;
+    }
+
+    // Difficulty selection buttons (class .quiz-difficulty, data-mode attribute)
+    if (btn.classList && btn.classList.contains('quiz-difficulty')) {
+      ev.preventDefault();
+      const mode = btn.dataset.mode || btn.getAttribute('data-mode');
+      endlessMode = (mode === 'endless');
+      difficulty = endlessMode ? null : mode;
+      if (quizDifficulty) quizDifficulty.style.display = 'none';
+      if (quizContainer) quizContainer.style.display = 'block';
+  idx = 0; score = 0; xp = 0; lives = 3; prevLives = lives; streak = 0; bestStreak = 0;
+      render();
+      return;
+    }
+
+    // Next button manual (if you allow manual next)
+    if (btn.matches('#quizNextBtn')) {
+      ev.preventDefault();
+      clearTimers();
+      idx++;
+      if (!currentQuestion || idx >= 10000) { /* safety */ }
+      if (!questionBank) return;
+      if (!endlessMode && idx >= (questionBank[difficulty] ? questionBank[difficulty].length : 0)) {
+        finishQuiz(true);
+      } else {
+        render();
+      }
+      return;
+    }
+
+// --- Restart handling ---
+if (btn.matches('#quizRestartBtn')) {
+  ev.preventDefault();
+  clearTimers();
+  idx = 0; score = 0; lives = 3; prevLives = lives;
+  xp = 0; level = 1; xpToNext = 50; // reset XP & Level
+  streak = 0; bestStreak = 0;
+  if (quizContainer) quizContainer.style.display = 'none';
+  if (quizWelcome) quizWelcome.style.display = 'block';
+  return;
+}
+  });
+
+  // Ensure initial UI state if elements exist
+  if (quizWelcome) quizWelcome.style.display = (quizWelcome.style.display === 'none') ? 'none' : 'block';
+  if (quizDifficulty) quizDifficulty.style.display = 'none';
+  if (quizContainer) quizContainer.style.display = 'none';
+}
+
+// Auto-initialize when DOM ready if showSection('quiz') won't call it
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initQuiz);
+} else {
+  initQuiz();
+}
+
+
+// ---------- end of initQuiz replacement ----------//
 
 
 // Check API status
@@ -821,28 +1197,170 @@ function saveToHistory(message, result) {
 
 // Update statistics
 function updateStats(result) {
-    totalScans++;
+  totalScans++;
 
-    if (result.toLowerCase().includes("phishing")) {
-        phishingScans++;
-    } else {
-        safeScans++;
-    }
+  if (result.toLowerCase().includes("phishing")) {
+    phishingScans++;
+  } else {
+    safeScans++;
+  }
 
-    // Find the stats elements dynamically
-    const statsSection = document.getElementById('statsMainSection');
-    if (!statsSection) return; // section not loaded yet
+  // Save numeric counters
+  saveStats();
 
-    const totalScansEl = statsSection.querySelector('#totalScans');
-    const phishingScansEl = statsSection.querySelector('#phishingScans');
-    const safeScansEl = statsSection.querySelector('#safeScans');
+  // Add a small event to scan history (useful for trend charts later)
+  try {
+    const events = JSON.parse(localStorage.getItem('surlinkScanEvents') || '[]');
+    events.push({ ts: Date.now(), result: result.toLowerCase() });
+    // keep only last 200 events to avoid bloat
+    localStorage.setItem('surlinkScanEvents', JSON.stringify(events.slice(-200)));
+  } catch (e) {}
 
-    if (totalScansEl) totalScansEl.textContent = totalScans;
-    if (phishingScansEl) phishingScansEl.textContent = phishingScans;
-    if (safeScansEl) safeScansEl.textContent = safeScans;
+  // Update UI + chart
+  updateStatsDisplay();
+}
+/* ---------------------------
+   STATS UI / Chart Integration
+   --------------------------- */
 
-    // Save to localStorage
-    saveStats();
+let statsChart = null;
+
+function initStatsSection() {
+  // update DOM references quickly (in case elements were added after initial load)
+  const doughnutCanvas = document.getElementById('statsDoughnut');
+  const resetBtn = document.getElementById('resetStatsBtn');
+  const editProfileBtn = document.getElementById('editProfileBtn');
+
+  // Create Chart if Chart.js is present
+  if (doughnutCanvas && typeof Chart !== 'undefined') {
+    const ctx = doughnutCanvas.getContext('2d');
+
+    statsChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Phishing', 'Safe'],
+        datasets: [{
+          data: [phishingScans || 0, safeScans || 0],
+          backgroundColor: ['#ef4444', '#10b981'],
+          hoverOffset: 8,
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) {
+                const v = ctx.raw || 0;
+                const total = (ctx.dataset.data || []).reduce((a,b)=>a+(b||0),0) || 1;
+                const pct = Math.round((v / total) * 100);
+                return `${ctx.label}: ${v} (${pct}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // hook reset button
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      if (!confirm('Reset scan statistics? This cannot be undone.')) return;
+      totalScans = phishingScans = safeScans = 0;
+      saveStats();
+      updateStatsDisplay();
+    });
+  }
+
+  // edit profile button (simple inline edit for name)
+  if (editProfileBtn) {
+    editProfileBtn.addEventListener('click', () => {
+      const current = getPlayerProfile();
+      const name = prompt('Display name:', current.name || '');
+      if (name !== null) {
+        const profile = Object.assign({}, current, { name: name || 'Guest' });
+        savePlayerProfile(profile);
+      }
+    });
+  }
+
+  // initial render
+  updateStatsDisplay();
+  updateProfileUI();
+}
+
+/* update DOM numbers + chart */
+function updateStatsDisplay() {
+  if (totalScansEl) totalScansEl.textContent = totalScans;
+  if (phishingScansEl) phishingScansEl.textContent = phishingScans;
+  if (safeScansEl) safeScansEl.textContent = safeScans;
+
+  // Chart update
+  if (statsChart) {
+    statsChart.data.datasets[0].data = [phishingScans, safeScans];
+    statsChart.update('active');
+  }
+
+  // update legend text (small textual summary)
+  const legend = document.getElementById('chartLegend');
+  if (legend) {
+    const total = Math.max(1, (phishingScans + safeScans));
+    const pctPhishing = Math.round((phishingScans / total) * 100);
+    const pctSafe = Math.round((safeScans / total) * 100);
+    legend.innerHTML = `<strong>${total}</strong> total • <span style="color:#ef4444">Phishing ${pctPhishing}%</span> • <span style="color:#10b981">Safe ${pctSafe}%</span>`;
+  }
+
+  // update player summary counts if present
+  const games = document.getElementById('playerGames');
+  if (games) {
+    const s = getPlayerProfile() || {};
+    // try to surface a simple gamesPlayed value stored in localStorage
+    const gp = parseInt(s.gamesPlayed || 0, 10) || 0;
+    games.textContent = gp;
+  }
+}
+
+/* -----------------------
+   Player Profile helpers
+   ----------------------- */
+function getPlayerProfile() {
+  try {
+    return JSON.parse(localStorage.getItem('surlinkPlayer') || '{}');
+  } catch (e) { return {}; }
+}
+function savePlayerProfile(profile) {
+  localStorage.setItem('surlinkPlayer', JSON.stringify(profile || {}));
+  updateProfileUI();
+}
+function updateProfileUI() {
+  const p = getPlayerProfile();
+  const nameEl = document.getElementById('playerName');
+  const avatarEl = document.getElementById('playerAvatar');
+  const badgeEl = document.getElementById('playerBadge');
+  const levelEl = document.getElementById('profileLevel');
+  const xpEl = document.getElementById('profileXP');
+  const xpFill = document.getElementById('profileXPbarFill');
+  const best = document.getElementById('playerBestStreak');
+
+  if (nameEl) nameEl.textContent = p.name || 'Guest';
+  if (avatarEl) avatarEl.textContent = (p.name && p.name.length ? p.name[0].toUpperCase() : 'G');
+
+  // Show level/xp if present in profile, else fallback to defaults
+  const level = p.level || 1;
+  const xp = p.xp || 0;
+  const xpTo = p.xpToNext || 50;
+
+  if (badgeEl) badgeEl.textContent = p.badge || getBadgeForLevel(level);
+  if (levelEl) levelEl.textContent = `Lvl ${level}`;
+  if (xpEl) xpEl.textContent = `XP: ${xp} / ${xpTo}`;
+  if (xpFill) xpFill.style.width = `${Math.min(100, Math.round((xp / xpTo) * 100))}%`;
+
+  if (best) best.textContent = p.bestStreak || 0;
 }
 
 // Save stats to localStorage
@@ -1472,7 +1990,7 @@ const translations = {
     chat_scanner: "Chat Scanner",
     scan_history: "Scan History",
     statistics: "Statistics",
-    quiz: "Quiz",
+    quiz: "Gamified Quiz",
     api_status: "API Status",
     feedback: "Feedback",
     account: "Account",
@@ -1480,7 +1998,6 @@ const translations = {
     login_register: "Login / Register",
     logout: "Logout",
     appearance: "Appearance",
-    dark_theme: "🌙 Dark Theme",
     welcome: "Welcome to SûrLink",
     welcome_desc: "I'm here to help you detect phishing attempts in messages, emails, and text content using advanced AI technology.",
     try_examples: "Try these examples:",
@@ -1520,7 +2037,7 @@ const translations = {
     chat_scanner: "Chat Scanner",
     scan_history: "Kasaysayan ng Scan",
     statistics: "Istatistika",
-    quiz: "Pagsusulit",
+    quiz: "Laroang Pagsusulit",
     api_status: "Kalagayan ng API",
     feedback: "Puna",
     account: "Account",
@@ -1528,7 +2045,6 @@ const translations = {
     login_register: "Login / Rehistro",
     logout: "Logout",
     appearance: "Hitsura",
-    dark_theme: "🌙 Madilim",
     welcome: "Maligayang Pagdating sa SûrLink",
     welcome_desc: "Narito ako para tulungan kang matukoy ang mga pagtatangkang phishing sa mga mensahe, email, at teksto gamit ang makabagong AI technology.",
     try_examples: "Subukan ang mga halimbawang ito:",
