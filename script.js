@@ -324,11 +324,24 @@ function showSection(sectionName) {
             updateProfileUI();
           }
           if (sectionName === 'status') checkApiStatus();
+      if (sectionName === 'status') {
+        const lang = localStorage.getItem('surLinkLang') || 'en';
+        setTimeout(() => applyTranslations(lang), 0);
+      }
+    if (sectionName === 'status') {
+      const lang = localStorage.getItem('surLinkLang') || 'en';
+      setTimeout(() => applyTranslations(lang), 0);
+    }
           if (sectionName === 'quiz' && !window.__quizInit) {
             initQuiz();
             window.__quizInit = true;
           }
           if (sectionName === 'feedback') initFeedback();
+      // Apply translations after feedback section loads
+      if (sectionName === 'feedback') {
+        const lang = localStorage.getItem('surLinkLang') || 'en';
+        setTimeout(() => applyTranslations(lang), 0);
+      }
         }, 0);
       })
       .catch(err => console.error(`Failed to load ${sectionName}:`, err));
@@ -346,8 +359,11 @@ function showSection(sectionName) {
       window.__quizInit = true;
     }
     if (sectionName === "feedback" && !window._feedback) {
-      initFeedback();
-      window._feedback = true;
+  initFeedback();
+  window._feedback = true;
+  // Apply translations after feedback section loads
+  const lang = localStorage.getItem('surLinkLang') || 'en';
+  setTimeout(() => applyTranslations(lang), 0);
     }
   }
 
@@ -1578,6 +1594,7 @@ function initFeedback() {
 
   let isSubmitting = false; // Flag to prevent double submission
 
+
   // Handle submission
   newSubmitBtn.addEventListener("click", (event) => {
     event.preventDefault();
@@ -1590,11 +1607,23 @@ function initFeedback() {
     const type = typeEl.value;
     const message = messageEl.value.trim();
 
+    // Language-aware feedback messages
+    const lang = localStorage.getItem('surLinkLang') || 'en';
+    const feedbackMsgs = {
+      en: {
+        invalid: "⚠️ Please enter meaningful feedback before submitting.",
+        success: "✅ Thank you! Your feedback has been sent."
+      },
+      tl: {
+        invalid: "⚠️ Pakilagay ng makabuluhang puna bago magsumite.",
+        success: "✅ Salamat! Naipadala na ang iyong puna."
+      }
+    };
+
     // Validate message
     if (!message || message.length < 2) {
       console.log("Validation failed: message is empty or too short");
-      status.textContent =
-        "⚠️ Please enter meaningful feedback before submitting.";
+      status.textContent = feedbackMsgs[lang]?.invalid || feedbackMsgs.en.invalid;
       status.style.color = "orange";
       status.classList.add("show");
       messageEl.focus();
@@ -1607,7 +1636,7 @@ function initFeedback() {
     messageEl.disabled = true;
 
     // Show success
-    status.textContent = "✅ Thank you! Your feedback has been sent.";
+    status.textContent = feedbackMsgs[lang]?.success || feedbackMsgs.en.success;
     status.style.color = "green";
     status.classList.add("show");
 
@@ -2053,7 +2082,7 @@ const translations = {
     title: "SûrLink",
     tagline: "Gawa para Mag-detect, Disenyo para Magprotekta",
     chat_scanner: "Chat Scanner",
-    scan_history: "Kasaysayan ng Scan",
+    scan_history: "Nakaraang Scans",
     statistics: "Istatistika",
     quiz: "Laroang Pagsusulit",
     api_status: "Kalagayan ng API",
@@ -2078,7 +2107,7 @@ const translations = {
     phishing_detected: "Natukoy na Phishing",
     safe_messages: "Ligtas na Mensahe",
     checking: "Sinusuri...",
-    feedback_title: "Pinahahalagahan namin ang iyong puna",
+    feedback_title: "Mahalaga ang puna mo",
     feedback_type: "Uri ng Puna",
     suggestion: "💡 Suhestiyon",
     bug: "🐞 Ulat ng Bug",
