@@ -305,21 +305,18 @@ function showSection(sectionName) {
     if (btn) btn.classList.add('active');
 
     // Lazy load content if section has data-lazy and not yet loaded
-    if (sectionEl.dataset.lazy && !sectionEl.dataset.loaded) {
-        fetch(`sections/${sectionName}.html`) // your separate HTML files
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error(`Failed to load ${sectionName}: ${res.status} ${res.statusText}`);
-                }
-                return res.text();
-            })
-            .then(html => {
+  if (sectionEl.dataset.lazy && !sectionEl.dataset.loaded) {
+    fetch(`sections/${sectionName}.html`)
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Failed to load ${sectionName}: ${res.status} ${res.statusText}`);
+        }
+        return res.text();
+      })
+      .then(html => {
         sectionEl.innerHTML = html;
         sectionEl.dataset.loaded = "true";
-
-        // Wait for next tick to ensure DOM is updated
         setTimeout(() => {
-          // Special initialization after content is loaded
           if (sectionName === 'stats') {
             loadStats();
             initStatsSection();
@@ -331,23 +328,28 @@ function showSection(sectionName) {
             initQuiz();
             window.__quizInit = true;
           }
-          if (sectionName === 'feedback') initFeedback(); // if needed
+          if (sectionName === 'feedback') initFeedback();
         }, 0);
-            })
-            .catch(err => console.error(`Failed to load ${sectionName}:`, err));
-    } else {
-        // Section already loaded — run init if necessary
-        if (sectionName === 'stats') loadStats();
-        if (sectionName === 'status') checkApiStatus();
-        if (sectionName === 'quiz' && !window.__quizInit) {
-            initQuiz();
-            window.__quizInit = true;
-        }
-        if (sectionName === "feedback" && !window._feedback) {
-          initFeedback();
-          window._feedback = true;
-        }
+      })
+      .catch(err => console.error(`Failed to load ${sectionName}:`, err));
+  } else {
+    // Section already loaded — run init if necessary
+    if (sectionName === 'stats') {
+      loadStats();
+      initStatsSection();
+      updateStatsDisplay();
+      updateProfileUI();
     }
+    if (sectionName === 'status') checkApiStatus();
+    if (sectionName === 'quiz' && !window.__quizInit) {
+      initQuiz();
+      window.__quizInit = true;
+    }
+    if (sectionName === "feedback" && !window._feedback) {
+      initFeedback();
+      window._feedback = true;
+    }
+  }
 
     // Auto-close drawer on mobile after navigation
     const menuToggle = document.getElementById('menuToggle');
@@ -733,6 +735,18 @@ document.addEventListener('click', function (ev) {
 });
 
 function finishQuiz(won = true, quit = false) {
+  // Defensive: update stats display in case stats section is open
+  updateStatsDisplay();
+  // Save best streak, games played, level, XP, badge to profile
+  const profile = getPlayerProfile();
+  if (bestStreak > (profile.bestStreak || 0)) profile.bestStreak = bestStreak;
+  profile.games = (profile.games || 0) + 1;
+  profile.level = level;
+  profile.xp = xp;
+  profile.xpToNext = xpToNext;
+  profile.badge = getBadgeForLevel(level);
+  savePlayerProfile(profile);
+  updateProfileUI();
   clearTimers();
   if (quizAnswers) quizAnswers.innerHTML = '';
   if (quizNextBtn) quizNextBtn.style.display = 'none';
@@ -892,38 +906,58 @@ if (document.readyState === 'loading') {
 
 // Check API status
 async function checkApiStatus() {
-    // Find elements dynamically
-    const statusSection = document.getElementById('statusMainSection');
-    if (!statusSection) return; // section not loaded yet
+  // Find elements dynamically
+  const statusSection = document.getElementById('statusMainSection');
+  if (!statusSection) return; // section not loaded yet
 
-    const statusIndicator = statusSection.querySelector('.status-indicator');
-    const statusText = statusSection.querySelector('.status-text');
-    if (!statusIndicator || !statusText) return;
+  // Detection system elements
+  const detectionStatusIndicator = document.getElementById('detectionStatusIndicator');
+  const detectionStatusText = document.getElementById('detectionStatusText');
+  // Explainer elements
+  const explainerStatusIndicator = document.getElementById('explainerStatusIndicator');
+  const explainerStatusText = document.getElementById('explainerStatusText');
+  if (!detectionStatusIndicator || !detectionStatusText || !explainerStatusIndicator || !explainerStatusText) return;
 
-    try {
-        statusIndicator.className = "status-indicator checking";
-        statusText.textContent = "Checking...";
+  // Set all to checking first
+  detectionStatusIndicator.className = "status-indicator checking";
+  detectionStatusText.textContent = "Checking...";
+  explainerStatusIndicator.className = "status-indicator checking";
+  explainerStatusText.textContent = "Checking...";
 
-        // Check main classification API
-        const response = await fetch(`${apiUrl}/health`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-        });
-
-      // APIFreeLLM is always available client-side
-      const explainerStatus = "Available";
-
-        if (response.ok) {
-            statusIndicator.className = "status-indicator online";
-            statusText.textContent = `Online (Explainer: ${explainerStatus})`;
-        } else {
-            throw new Error('API not responding');
-        }
-    } catch (error) {
-        console.error('API Status Check Error:', error);
-        statusIndicator.className = "status-indicator offline";
-        statusText.textContent = "Offline";
+  // Check Detection System
+  try {
+    const response = await fetch(`${apiUrl}/health`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (response.ok) {
+      detectionStatusIndicator.className = "status-indicator online";
+      detectionStatusText.textContent = "Online";
+    } else {
+      throw new Error('API not responding');
     }
+  } catch (error) {
+    detectionStatusIndicator.className = "status-indicator offline";
+    detectionStatusText.textContent = "Offline";
+  }
+
+  // Check Explainer (APIFreeLLM client-side or explainerUrl)
+  let explainerOnline = false;
+  if (window.apifree && window.apifree.chat) {
+    explainerOnline = true;
+  } else if (explainerUrl) {
+    try {
+      const explainerResp = await fetch(`${explainerUrl}/health`, { method: 'GET' });
+      explainerOnline = explainerResp.ok;
+    } catch (e) { explainerOnline = false; }
+  }
+  if (explainerOnline) {
+    explainerStatusIndicator.className = "status-indicator online";
+    explainerStatusText.textContent = "Online";
+  } else {
+    explainerStatusIndicator.className = "status-indicator offline";
+    explainerStatusText.textContent = "Offline";
+  }
 }
 
 // Append message to chat
@@ -1226,6 +1260,8 @@ function updateStats(result) {
 let statsChart = null;
 
 function initStatsSection() {
+  // Update player profile UI when stats section is shown
+  updateProfileUI();
   // update DOM references quickly (in case elements were added after initial load)
   const doughnutCanvas = document.getElementById('statsDoughnut');
   const resetBtn = document.getElementById('resetStatsBtn');
@@ -1319,9 +1355,7 @@ function updateStatsDisplay() {
   const games = document.getElementById('playerGames');
   if (games) {
     const s = getPlayerProfile() || {};
-    // try to surface a simple gamesPlayed value stored in localStorage
-    const gp = parseInt(s.gamesPlayed || 0, 10) || 0;
-    games.textContent = gp;
+    games.textContent = s.games || 0;
   }
 }
 

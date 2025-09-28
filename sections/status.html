@@ -1,7 +1,19 @@
 <div class="content-scroll">
     <h3 style="margin-bottom:12px;" data-i18n="api_status">API Status</h3>
-    <div class="api-status" id="apiStatus">
-    <span class="status-indicator" id="statusIndicator" role="status" aria-live="polite">●</span>
-    <span class="status-text" id="statusText" data-i18n="checking">Checking...</span>
-    </div>
+        <div class="api-status-grid" style="display: flex; gap: 18px; flex-wrap: wrap;">
+            <div class="api-status-box" id="detectionStatusBox" style="flex:1; min-width:220px; background:var(--glass); border-radius:12px; padding:18px 16px; display:flex; align-items:center; gap:14px; border:1px solid rgba(139,92,246,0.08);">
+                <span class="status-indicator" id="detectionStatusIndicator" role="status" aria-live="polite">●</span>
+                <div>
+                    <div style="font-weight:600; font-size:1.08rem;">Detection System</div>
+                    <div class="status-text" id="detectionStatusText" data-i18n="checking">Checking...</div>
+                </div>
+            </div>
+            <div class="api-status-box" id="explainerStatusBox" style="flex:1; min-width:220px; background:var(--glass); border-radius:12px; padding:18px 16px; display:flex; align-items:center; gap:14px; border:1px solid rgba(139,92,246,0.08);">
+                <span class="status-indicator" id="explainerStatusIndicator" role="status" aria-live="polite">●</span>
+                <div>
+                    <div style="font-weight:600; font-size:1.08rem;">Explainer</div>
+                    <div class="status-text" id="explainerStatusText" data-i18n="checking">Checking...</div>
+                </div>
+            </div>
+        </div>
 </div>
