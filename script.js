@@ -1269,9 +1269,12 @@ function initStatsSection() {
 
   // Create Chart if Chart.js is present
   if (doughnutCanvas && typeof Chart !== 'undefined') {
+    // Destroy previous chart instance if it exists
+    if (window.statsChart && typeof window.statsChart.destroy === 'function') {
+      window.statsChart.destroy();
+    }
     const ctx = doughnutCanvas.getContext('2d');
-
-    statsChart = new Chart(ctx, {
+    window.statsChart = new Chart(ctx, {
       type: 'doughnut',
       data: {
         labels: ['Phishing', 'Safe'],
