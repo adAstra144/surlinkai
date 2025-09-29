@@ -1726,24 +1726,36 @@ setInterval(checkApiStatus, 30000);
 
 // Theme toggle functionality
 function toggleTheme() {
-    const body = document.body;
-    const themeToggle = document.getElementById('themeToggle');
-    const themeLabel = document.querySelector('.theme-label');
-    const isDark = body.classList.contains('light-theme'); // currently light?
+  const body = document.body;
+  const themeToggle = document.getElementById('themeToggle');
+  const themeLabel = document.querySelector('.theme-label');
+  const isDark = body.classList.contains('light-theme'); // currently light?
 
-    if (isDark) {
-        // Switch to dark theme
-        body.classList.remove('light-theme');
-        localStorage.setItem('surLinkTheme', 'dark');
-        themeToggle.checked = false;
-        if (themeLabel) themeLabel.textContent = '🌙 Dark Theme';
-    } else {
-        // Switch to light theme
-        body.classList.add('light-theme');
-        localStorage.setItem('surLinkTheme', 'light');
-        themeToggle.checked = true;
-        if (themeLabel) themeLabel.textContent = '☀️ Light Theme';
-    }
+  if (isDark) {
+    // Switch to dark theme
+    body.classList.remove('light-theme');
+    localStorage.setItem('surLinkTheme', 'dark');
+    themeToggle.checked = false;
+    if (themeLabel) themeLabel.textContent = '🌙 Dark Theme';
+  } else {
+    // Switch to light theme
+    body.classList.add('light-theme');
+    localStorage.setItem('surLinkTheme', 'light');
+    themeToggle.checked = true;
+    if (themeLabel) themeLabel.textContent = '☀️ Light Theme';
+  }
+  // Update splash screen theme immediately if visible
+  updateSplashScreenTheme();
+}
+
+// Ensure splash screen theme matches current theme
+function updateSplashScreenTheme() {
+  const splash = document.getElementById('splashScreen');
+  if (!splash) return;
+  // Force reflow for CSS to apply
+  splash.classList.remove('force-repaint');
+  void splash.offsetWidth;
+  splash.classList.add('force-repaint');
 }
 
 // Load saved theme on page load
@@ -1753,15 +1765,16 @@ function loadTheme() {
     const themeToggle = document.getElementById('themeToggle');
     const themeLabel = document.querySelector('.theme-label');
 
-    if (savedTheme === 'light') {
-        body.classList.add('light-theme');
-        if (themeToggle) themeToggle.checked = true;
-        if (themeLabel) themeLabel.textContent = '☀️ Light Theme';
-    } else {
-        body.classList.remove('light-theme');
-        if (themeToggle) themeToggle.checked = false;
-        if (themeLabel) themeLabel.textContent = '🌙 Dark Theme';
-    }
+  if (savedTheme === 'light') {
+    body.classList.add('light-theme');
+    if (themeToggle) themeToggle.checked = true;
+    if (themeLabel) themeLabel.textContent = '☀️ Light Theme';
+  } else {
+    body.classList.remove('light-theme');
+    if (themeToggle) themeToggle.checked = false;
+    if (themeLabel) themeLabel.textContent = '🌙 Dark Theme';
+  }
+  updateSplashScreenTheme();
 }
 
 // === Feedback Function ===

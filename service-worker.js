@@ -1,5 +1,6 @@
-// Automatically generate a cache name based on timestamp
-const CACHE_NAME = `surlinkai-${Date.now()}`;
+// Use a versioned cache name that updates on every deploy
+const CACHE_VERSION = 'v3'; // Increment this on deploy
+const CACHE_NAME = `surlinkai-${CACHE_VERSION}`;
 
 const ASSETS_TO_CACHE = [
   '/',
@@ -18,11 +19,12 @@ const ASSETS_TO_CACHE = [
 ];
 
 // Install event: cache files
+// Install event: cache files
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS_TO_CACHE))
   );
-  self.skipWaiting();
+  self.skipWaiting(); // Activate worker immediately
 });
 
 // Activate event: clean up old caches
@@ -36,17 +38,40 @@ self.addEventListener('activate', event => {
       )
     )
   );
-  self.clients.claim();
+  self.clients.claim(); // Take control of all clients
 });
 
 // Fetch event: serve from cache, network fallback
 self.addEventListener('fetch', event => {
-  if (event.request.url.includes('/explain')) {
+  // Always bypass cache for HTML/CSS/JS to get latest
+  const url = event.request.url;
+  if (url.endsWith('.html') || url.endsWith('.css') || url.endsWith('.js')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          // Update cache
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+  if (url.includes('/explain')) {
     // Network-first for API
     event.respondWith(fetch(event.request));
-  } else {
-    event.respondWith(
-      caches.match(event.request).then(resp => resp || fetch(event.request))
-    );
+    return;
+  }
+  // Default: cache-first
+  event.respondWith(
+    caches.match(event.request).then(resp => resp || fetch(event.request))
+  );
+});
+
+// Listen for skipWaiting message from client
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
   }
 });
