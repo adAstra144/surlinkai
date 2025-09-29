@@ -1130,7 +1130,7 @@ function displayScanResult(classification, confidence, explanation = null) {
     const isPhishing = classification.toLowerCase().includes("phishing");
     const icon = isPhishing ? "🚨" : "✅";
     const color = isPhishing ? "#ef4444" : "#10b981";
-    const lang = localStorage.getItem('surLinkLang') || 'en';
+  let lang = localStorage.getItem('surLinkLang');
     let advice;
     if (lang === 'tl') {
       advice = isPhishing ? translations.tl.phishing_advice : translations.tl.safe_advice;
@@ -1167,7 +1167,7 @@ function displayScanResult(classification, confidence, explanation = null) {
     } else {
       content += `
       <div id="ai-explanation">
-        <div id="ai-explanation-title">${translations[lang].why_decision}</div>
+        <div id="ai-explanation-title">${lang === 'tl' ? translations.tl.why_decision : 'Why this decision'}</div>
         <div id="ai-explanation-content">${explanation}</div>
       </div>`;
     }
