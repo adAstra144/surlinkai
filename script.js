@@ -248,19 +248,6 @@ function setupMobileMenu() {
         menuToggle.setAttribute('aria-expanded', 'false');
     };
 
-  const inputArea = document.querySelector('.input-area');
-  function updateInputAreaTransform() {
-    if (!inputArea) return;
-    if (window.matchMedia('(min-width: 1025px)').matches) {
-      if (sidebar.classList.contains('collapsed')) {
-        inputArea.style.transform = 'translateX(120px)';
-      } else {
-        inputArea.style.transform = 'translateX(280px)';
-      }
-    } else {
-      inputArea.style.transform = '';
-    }
-  }
   menuToggle.addEventListener('click', () => {
     if (window.matchMedia('(min-width: 1025px)').matches) {
       sidebar.classList.toggle('collapsed');
