@@ -59,8 +59,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial padding adjustment
     adjustChatBottomPadding();
 
-    // APIFreeLLM Explanation toggle button logic
-    // Load explanation toggle state from localStorage, default to true
     // Always restore from localStorage
     function updateExplanationToggleUI() {
       const savedExplanationState = localStorage.getItem('surLinkExplanationsEnabled');
@@ -252,15 +250,11 @@ function setupMobileMenu() {
     if (window.matchMedia('(min-width: 1025px)').matches) {
       sidebar.classList.toggle('collapsed');
       menuToggle.setAttribute('aria-expanded', !sidebar.classList.contains('collapsed'));
-      updateInputAreaTransform();
       return;
     }
     const willOpen = !sidebar.classList.contains('open');
     if (willOpen) openMenu(); else closeMenu();
   });
-  // Update input area on load and on resize
-  updateInputAreaTransform();
-  window.addEventListener('resize', updateInputAreaTransform);
 
     backdrop.addEventListener('click', (e) => {
         if (!sidebar.contains(e.target)) closeMenu();
@@ -287,7 +281,6 @@ function setupMobileMenu() {
       // Start closed on mobile
       closeMenu();
     }
-    updateInputAreaTransform();
   });
 
     document.addEventListener('keydown', (e) => {
@@ -1155,7 +1148,7 @@ function displayScanResult(classification, confidence, explanation = null) {
       content += `
       <div id="ai-explanation">
         <div id="ai-explanation-title">${lang === 'tl' ? translations.tl.why_decision : 'Why this decision'}</div>
-        <div id="ai-explanation-content">${explanation}</div>
+        <div id="ai-explanation-content"></div>
       </div>`;
     }
   } else {
@@ -1182,6 +1175,15 @@ function displayScanResult(classification, confidence, explanation = null) {
     }
     
     bubble.querySelector('.bubble-content').innerHTML = content;
+    // If explanation is present and not disabled/unavailable, render as Markdown
+    if (explanation && explanation !== '__EXPLAINER_UNAVAILABLE__' && explanation !== '') {
+      const expEl = bubble.querySelector('#ai-explanation-content');
+      if (expEl && window.marked) {
+        expEl.innerHTML = marked.parse(explanation);
+      } else if (expEl) {
+        expEl.textContent = explanation;
+      }
+    }
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
@@ -1695,43 +1697,26 @@ function updateExplainerUrl(url) {
 
 // APIFreeLLM explainer integration: prefer client-side apifree.chat if available, otherwise fallback to explainerUrl
 async function callExplainerModel(message, label) {
-    const lang = localStorage.getItem('surLinkLang') || 'en';
-    
-    // Language-specific prompts
-    const prompts = {
-        en: `You are a robot that identifies phishing and safe messages. The message was classified as "${label}". Explain why this decision was made and point out any words or patterns that led to it. Limit your answer to 2–3 sentences. No greetings, introductions, or closing remarks Don't restate the message and whether the message was safe or phishing. Output only the explanation. Message:\n\n${message}`,
-        tl: `Ikaw ay isang robot na nakakatukoy ng phishing at ligtas na mensahe. Ang mensahe ay na-classify bilang "${label}". Ipaliwanag kung bakit ganito ang naging desisyon at ituro ang mga salita o pattern na nagdulot nito. Limitahan ang sagot sa 2–3 pangungusap lang. Walang pagbati, pagpapakilala, o pangwakas na salita. Huwag ng ulitin ang mensahe at kung safe o phishing. Ilabas lang ang paliwanag. Mensahe:\n\n${message}`,
-    };
-    
-    const prompt = prompts[lang] || prompts.en;  // Fallback to English if language not supported
-
-  // Try APIFreeLLM client if loaded on the page
-  try {
-    if (window.apifree && typeof apifree.chat === 'function') {
-      const resp = await apifree.chat(prompt);
-      // Detect cooldown or unavailable
-      if (typeof resp === 'string') {
-        if (resp.toLowerCase().includes('cooldown') || resp.toLowerCase().includes('wait') || resp.toLowerCase().includes('limit')) {
-          return '__EXPLAINER_UNAVAILABLE__';
+    // Call local FastAPI backend for explanation
+    try {
+        const response = await fetch("https://adastra144-Explainer.hf.space/explain", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message, label })
+        });
+        if (!response.ok) {
+            // If backend is unreachable or returns error, treat as unavailable
+            return '__EXPLAINER_UNAVAILABLE__';
         }
-        return resp.trim();
-      }
-      if (resp && typeof resp === 'object') {
-        if (resp.error && (resp.error.toLowerCase().includes('cooldown') || resp.error.toLowerCase().includes('wait') || resp.error.toLowerCase().includes('limit'))) {
-          return '__EXPLAINER_UNAVAILABLE__';
+        const data = await response.json();
+        if (data && typeof data.reply === 'string') {
+            return data.reply.trim();
         }
-        if (resp.response) return String(resp.response).trim();
-        if (resp.text) return String(resp.text).trim();
-      }
-      return '';
+        return '__EXPLAINER_UNAVAILABLE__';
+    } catch (err) {
+        console.warn('Explain backend error', err);
+        return '__EXPLAINER_UNAVAILABLE__';
     }
-  } catch (err) {
-    console.warn('APIFree explain error', err);
-    return '__EXPLAINER_UNAVAILABLE__';
-  }
-
-
-    // No fallback: APIFreeLLM only
 
   return '';
 }
