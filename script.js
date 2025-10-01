@@ -15,7 +15,7 @@ let totalScans = 0;
 let phishingScans = 0;
 let safeScans = 0;
 let apiUrl = "https://adastra144-anti-phishing-scanner-0.hf.space";
-let explainerUrl = "";
+let explainerUrl = "https://adastra144-explainer.hf.space/explain";
 let isScanning = false;
 const badgeLevels = [
   { minLevel: 1, name: "Novice Learner 🐣" },
@@ -1014,7 +1014,8 @@ async function checkApiStatus() {
     explainerOnline = true;
   } else if (explainerUrl) {
     try {
-      const explainerResp = await fetch(`${explainerUrl}/health`, { method: 'GET' });
+      // The new explainer endpoint is /explain, so we check if it responds
+      const explainerResp = await fetch(`${explainerUrl}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'ping', label: 'test' }) });
       explainerOnline = explainerResp.ok;
     } catch (e) { explainerOnline = false; }
   }
