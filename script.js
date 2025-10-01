@@ -2301,7 +2301,7 @@ window.translations = {
     welcome_desc: "Narito ako para tulungan kang matukoy ang mga pagtatangkang phishing sa mga mensahe, email, at teksto gamit ang makabagong AI technology.",
     try_examples: "Subukan ang mga halimbawang ito:",
     example1: "Ang iyong account ay nasuspinde. I-click dito para agad na ma-verify.",
-    example2: "Binabati kita! Nanalo ka ng $1000. I-claim ang iyong premyo ngayon.",
+    example2: "Nanalo ka ng $1000. Pindotin ang link para I-claim ang iyong premyo ngayon.",
     example3: "Handa na ang iyong package para kunin. I-click para kumpirmahin ang delivery.",
     message_placeholder: "Ilagay ang iyong mensahe dito...",
     scan: "I-scan",
@@ -2330,7 +2330,7 @@ window.translations = {
     phishing_advice: `⚠️ Ang mensaheng ito ay kahina-hinala at maaaring phishing attempt.<br><br>👉 <b>Anong gagawin:</b> Huwag sumagot, magbahagi ng personal na detalye, o mag-click ng anumang link/attachment.<br><br>🛡️ Pinakamainam: balewalain, burahin, o i-report ito.<br><br>🔒 <b>Paano iwasan ang phishing:</b><br>• Suriing mabuti ang email/number ng nagpadala.<br>• Mag-ingat sa maling spelling o kakaibang grammar.<br>• Huwag magtiwala sa mga nagmamadaling pananakot tulad ng “kumilos agad”.<br>• Gamitin ang opisyal na app o website sa halip na link sa mensahe.`,
     why_decision: "Bakit ito ang desisyon",
     // Onboarding system translations
-    onb_welcome_title: "Maligayang Pagdating sa SûrLink 👋",
+    onb_welcome_title: "Masayang Bati mula SûrLink🎉",
     onb_welcome_desc: "Nais mo ba ng mabilis na guided tour ng phishing scanner?",
     onb_no_btn: "Hindi, pamilyar na ako",
     onb_yes_btn: "Oo, bago ako dito",

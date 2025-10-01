@@ -23,7 +23,7 @@ window.startOnboarding = function () {
       <div class="onb-dim"></div>
 
       <div class="onb-welcome">
-        <div class="head" data-i8n="onb_welcome_title">Welcome to SûrLink 👋</div>
+  <div class="head" data-i8n="onb_welcome_title" style="text-align:center;">Welcome to SûrLink 👋</div>
         <div class="body">
           <p data-i8n="onb_welcome_desc">Would you like a quick guided tour of the phishing scanner?</p>
         </div>
