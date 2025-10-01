@@ -2282,7 +2282,7 @@ window.addEventListener("load", () => {
 
 
 // Translate website 
-const translations = {
+window.translations = {
   tl: {
     title: "SûrLink",
     tagline: "Gawa para Mag-detect, Disenyo para Magprotekta",
@@ -2329,6 +2329,44 @@ const translations = {
     safe_advice: `✅ Ang mensaheng ito ay mukhang ligtas.<br><br>👉 <b>Anong gagawin:</b> Maaari kang magpatuloy, ngunit manatiling alerto sa anumang kakaiba.<br><br>💡 <b>Mga tip sa kaligtasan:</b><br>• Suriing mabuti ang pinagmulan kung nagdududa.<br>• Mag-ingat sa di-inaasahang link o file.<br>• Panatilihing updated ang iyong device at security tools.<br>• Kapag nagdududa, mag-verify sa opisyal na paraan.`,
     phishing_advice: `⚠️ Ang mensaheng ito ay kahina-hinala at maaaring phishing attempt.<br><br>👉 <b>Anong gagawin:</b> Huwag sumagot, magbahagi ng personal na detalye, o mag-click ng anumang link/attachment.<br><br>🛡️ Pinakamainam: balewalain, burahin, o i-report ito.<br><br>🔒 <b>Paano iwasan ang phishing:</b><br>• Suriing mabuti ang email/number ng nagpadala.<br>• Mag-ingat sa maling spelling o kakaibang grammar.<br>• Huwag magtiwala sa mga nagmamadaling pananakot tulad ng “kumilos agad”.<br>• Gamitin ang opisyal na app o website sa halip na link sa mensahe.`,
     why_decision: "Bakit ito ang desisyon",
+    // Onboarding system translations
+    onb_welcome_title: "Maligayang Pagdating sa SûrLink 👋",
+    onb_welcome_desc: "Nais mo ba ng mabilis na guided tour ng phishing scanner?",
+    onb_no_btn: "Hindi, pamilyar na ako",
+    onb_yes_btn: "Oo, bago ako dito",
+    onb_skip_btn: "Laktawan",
+    onb_back_btn: "Bumalik",
+    onb_next_btn: "Susunod",
+    onb_step_titles: [
+      "Chat Scanner",
+      "Chat Area",
+      "Nakaraang Scans",
+      "Nakaraang Scans Area",
+      "Istatistika",
+      "Istatistika Area",
+      "Laroang Pagsusulit",
+      "Laroang Pagsusulit Area",
+      "Kalagayan ng API",
+      "Kalagayan ng API Area",
+      "Puna",
+      "Puna Area",
+      "Tapos na!"
+    ],
+    onb_step_descs: [
+      "Buksan ang Chat Scanner mula sa sidebar.",
+      "I-scan ang mga kahina-hinalang mensahe dito.",
+      "I-access ang iyong mga nakaraang scan.",
+      "Tingnan ang log ng mga nakaraang scan.",
+      "Suriin ang phishing statistics.",
+      "Makikita dito ang mga chart at trend.",
+      "Sumagot ng phishing awareness quiz.",
+      "Sanayin ang pagtukoy ng phishing attempts.",
+      "Tingnan ang kasalukuyang status ng SûrLink services.",
+      "Makikita dito ang live API status updates.",
+      "Magpadala ng iyong opinyon.",
+      "Ibahagi ang mga suhestiyon dito.",
+      "🎉 Salamat sa pagsali — enjoy gamitin ang SûrLink!"
+    ],
 
     // === QUIZ TRANSLATIONS ===
     quiz_title: "Cyber Defender",
@@ -2406,10 +2444,25 @@ document.addEventListener('DOMContentLoaded', () => {
 function applyTranslations(lang) {
   // Update all elements with data-i18n
   if (lang === 'tl') {
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-      const key = el.getAttribute('data-i18n');
-      if (translations.tl[key]) {
-        el.innerHTML = translations.tl[key];
+    // Support both data-i18n and data-i8n attributes for onboarding
+    document.querySelectorAll('[data-i18n], [data-i8n]').forEach(el => {
+      const key = el.getAttribute('data-i18n') || el.getAttribute('data-i8n');
+      if ([
+        'onb_welcome_title',
+        'onb_welcome_desc',
+        'onb_no_btn',
+        'onb_yes_btn',
+        'onb_skip_btn',
+        'onb_back_btn',
+        'onb_next_btn',
+        'onb_step_title',
+        'onb_step_desc'
+      ].includes(key) && window.translations.tl[key]) {
+        // Always use textContent for onboarding welcome/title/desc/buttons
+        el.textContent = window.translations.tl[key];
+      } else if (window.translations.tl[key]) {
+        // Use innerHTML for other elements
+        el.innerHTML = window.translations.tl[key];
       }
     });
     if (messageInput && translations.tl.message_placeholder) {

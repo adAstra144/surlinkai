@@ -19,35 +19,40 @@ window.startOnboarding = function () {
   document.body.appendChild(root);
 
   // UI
-  root.innerHTML = `
-    <div class="onb-dim"></div>
+    root.innerHTML = `
+      <div class="onb-dim"></div>
 
-    <div class="onb-welcome">
-      <div class="head">Welcome to SûrLink 👋</div>
-      <div class="body">
-        <p>Would you like a quick guided tour of the phishing scanner?</p>
-      </div>
-      <div class="cta">
-        <button class="onb-btn js-no">No, I'm familiar</button>
-        <button class="onb-btn primary js-yes">Yes, I'm new here</button>
-      </div>
-    </div>
-
-    <div class="onb-bar" style="display:none;">
-      <div class="progress"><span id="onb-progress"></span></div>
-      <div class="content">
-        <div class="left">
-          <div class="title" id="onb-title"></div>
-          <div class="desc" id="onb-desc"></div>
+      <div class="onb-welcome">
+        <div class="head" data-i8n="onb_welcome_title">Welcome to SûrLink 👋</div>
+        <div class="body">
+          <p data-i8n="onb_welcome_desc">Would you like a quick guided tour of the phishing scanner?</p>
         </div>
-        <div class="controls">
-          <button class="onb-btn js-skip">Skip</button>
-          <button class="onb-btn js-back">Back</button>
-          <button class="onb-btn primary js-next">Next</button>
+        <div class="cta">
+          <button class="onb-btn js-no" data-i8n="onb_no_btn">No, I'm familiar</button>
+          <button class="onb-btn primary js-yes" data-i8n="onb_yes_btn">Yes, I'm new here</button>
         </div>
       </div>
-    </div>
-  `;
+
+      <div class="onb-bar" style="display:none;">
+        <div class="progress"><span id="onb-progress"></span></div>
+        <div class="content">
+          <div class="left">
+            <div class="title" id="onb-title" data-i8n="onb_step_title"></div>
+            <div class="desc" id="onb-desc" data-i8n="onb_step_desc"></div>
+          </div>
+          <div class="controls">
+            <button class="onb-btn js-skip" data-i8n="onb_skip_btn">Skip</button>
+            <button class="onb-btn js-back" data-i8n="onb_back_btn">Back</button>
+            <button class="onb-btn primary js-next" data-i8n="onb_next_btn">Next</button>
+          </div>
+        </div>
+      </div>
+    `;
+    // Re-apply translations for onboarding elements after HTML is rendered
+    if (window.applyTranslations) {
+      const lang = localStorage.getItem('surLinkLang') || 'en';
+      window.applyTranslations(lang);
+    }
 
   // Elements
   const welcome = q('.onb-welcome', root);
@@ -185,9 +190,15 @@ window.startOnboarding = function () {
       highlightSection(step.section);
     }
 
-    // Title + Desc
-    titleEl.textContent = step.title;
-    descEl.textContent = step.desc;
+    // Use translations for step title/desc if available
+    const lang = localStorage.getItem('surLinkLang') || 'en';
+    if (lang === 'tl' && window.translations && window.translations.tl) {
+      titleEl.textContent = window.translations.tl.onb_step_titles[i] || step.title;
+      descEl.textContent = window.translations.tl.onb_step_descs[i] || step.desc;
+    } else {
+      titleEl.textContent = step.title;
+      descEl.textContent = step.desc;
+    }
 
     // Progress bar
     if (progressEl) {

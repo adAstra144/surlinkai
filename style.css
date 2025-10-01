@@ -1,7 +1,4 @@
 /* === Light Theme Onboarding === */
-body.light-theme .onb-dim {
-  background: rgba(255,255,255,0.55);
-}
 body.light-theme .onb-welcome {
   background: #fff;
   color: #1e2533;
