@@ -1,5 +1,5 @@
 // Use a versioned cache name that updates on every deploy
-const CACHE_VERSION = 'v3'; // Increment this on deploy
+const CACHE_VERSION = 'v4'; // Increment this on deploy
 const CACHE_NAME = `surlinkai-${CACHE_VERSION}`;
 
 const ASSETS_TO_CACHE = [
