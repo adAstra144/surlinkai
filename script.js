@@ -1018,33 +1018,39 @@ async function checkApiStatus() {
   explainerStatusText.textContent = "Checking...";
 
   // Check Detection System
+  let detectionOnline = false;
   try {
-    const response = await fetch(`${apiUrl}/health`, {
+    const detectionResp = await fetch('https://adastra144-anti-phishing-scanner-0.hf.space/health', {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(5000)
     });
-    if (response.ok) {
-      detectionStatusIndicator.className = "status-indicator online";
-      detectionStatusText.textContent = "Online";
-    } else {
-      throw new Error('API not responding');
-    }
+    detectionOnline = detectionResp.ok;
   } catch (error) {
+    detectionOnline = false;
+  }
+
+  if (detectionOnline) {
+    detectionStatusIndicator.className = "status-indicator online";
+    detectionStatusText.textContent = "Online";
+  } else {
     detectionStatusIndicator.className = "status-indicator offline";
     detectionStatusText.textContent = "Offline";
   }
 
-  // Check Explainer (APIFreeLLM client-side or explainerUrl)
+  // Check Explainer
   let explainerOnline = false;
-  if (window.apifree && window.apifree.chat) {
-    explainerOnline = true;
-  } else if (explainerUrl) {
-    try {
-      // The new explainer endpoint is /explain, so we check if it responds
-      const explainerResp = await fetch(`${explainerUrl}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'ping', label: 'test' }) });
-      explainerOnline = explainerResp.ok;
-    } catch (e) { explainerOnline = false; }
+  try {
+    const explainerResp = await fetch('https://adastra144-explainer.hf.space/health', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(5000)
+    });
+    explainerOnline = explainerResp.ok;
+  } catch (e) {
+    explainerOnline = false;
   }
+
   if (explainerOnline) {
     explainerStatusIndicator.className = "status-indicator online";
     explainerStatusText.textContent = "Online";
