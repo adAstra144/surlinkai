@@ -17,6 +17,31 @@ let safeScans = 0;
 let apiUrl = "https://adastra144-anti-phishing-scanner-0.hf.space";
 let explainerUrl = "https://adastra144-explainer.hf.space/explain";
 let isScanning = false;
+
+// AI Model Configuration
+let selectedModel = "default";
+let modelInitialized = false;
+const modelConfig = {
+  default: {
+    id: "default",
+    name: "HuggingFace",
+    apiUrl: "https://adastra144-anti-phishing-scanner-0.hf.space/analyze",
+    description: "Lightning-fast scanning"
+  },
+  advanced: {
+    id: "advanced",
+    name: "OpenRouter v1",
+    apiUrl: "https://adastra144-anti-phishing-scanner-0.hf.space/analyze/or1",
+    description: "Enhanced accuracy & deep analysis"
+  },
+  fast: {
+    id: "fast",
+    name: "OpenRouter v2",
+    apiUrl: "https://adastra144-anti-phishing-scanner-0.hf.space/analyze/or2",
+    description: "Maximum accuracy detection"
+  }
+};
+
 const badgeLevels = [
   { minLevel: 1, name: "Novice Learner 🐣" },
   { minLevel: 3, name: "Phishing Hunter 🕵️" },
@@ -56,6 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupMobileMenu();
     updateUserUI(); // Add this line to update UI on DOM ready
     setupImagePicker();
+    setupModelPicker();
     // Initial padding adjustment
     adjustChatBottomPadding();
 
@@ -1104,7 +1130,7 @@ function hideProgressBar() {
 }
 
 // New helper function to display results
-function displayScanResult(classification, confidence, explanation = null) {
+function displayScanResult(classification, confidence, explanation = null, modelUsed = null) {
     removeTypingIndicator();
     hideProgressBar();
     
@@ -1195,6 +1221,8 @@ async function scanMessage() {
 
     isScanning = true;
     scanBtn.disabled = true;
+    const modelPickerBtn = document.getElementById('modelPickerBtn');
+    if (modelPickerBtn) modelPickerBtn.disabled = true;
     scanBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Scanning...</span>';
 
     messageInput.value = "";
@@ -1204,7 +1232,7 @@ async function scanMessage() {
 
   try {
     // Get classification first
-    const response = await fetch(`${apiUrl}/analyze`, {
+    const response = await fetch(`${apiUrl}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message })
@@ -1212,33 +1240,39 @@ async function scanMessage() {
         
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const data = await response.json();
+    
+    // Extract model_used and fallback info
+    const modelUsed = data.model_used || selectedModel || 'unknown';
+    const fallbackNote = data.or_raw && data.or_raw.fallback ? ' (HF fallback)' : '';
         
-    // Show initial result without explanation
-    displayScanResult(data.result, data.confidence);
-        
-    // Update stats and history immediately
-    saveToHistory(message, data.result);
-    updateStats(data.result);
+    // Show initial result with model info
+    displayScanResult(data.result, data.confidence, null, modelUsed + fallbackNote);
         
     // Always check localStorage for the latest explanation toggle state
     const savedExplanationState = localStorage.getItem('surLinkExplanationsEnabled');
     const explanationsEnabled = savedExplanationState === null ? true : savedExplanationState === 'true';
     window.surLinkExplanationsEnabled = explanationsEnabled;
     if (window.updateExplanationToggleUI) window.updateExplanationToggleUI(); // keep UI in sync
+    
+    let explanation = null;
     if (explanationsEnabled) {
       try {
-        const explanation = await callExplainerModel(message, data.result);
+        explanation = await callExplainerModel(message, data.result);
         if (explanation) {
           // Update the result with explanation
-          displayScanResult(data.result, data.confidence, explanation);
+          displayScanResult(data.result, data.confidence, explanation, modelUsed + fallbackNote);
         }
       } catch (error) {
         console.log("Explanation service unavailable:", error);
       }
     } else {
       // If explanations are off, update result to hide explanation placeholder
-      displayScanResult(data.result, data.confidence, '');
+      displayScanResult(data.result, data.confidence, '', modelUsed + fallbackNote);
     }
+    
+    // Save to history with explanation (if available) and update stats
+    saveToHistory(message, data.result, explanation);
+    updateStats(data.result);
         
   } catch (error) {
     console.error("Scan Error:", error);
@@ -1251,6 +1285,8 @@ async function scanMessage() {
   } finally {
     isScanning = false;
     scanBtn.disabled = false;
+    const modelPickerBtn = document.getElementById('modelPickerBtn');
+    if (modelPickerBtn) modelPickerBtn.disabled = false;
     scanBtn.innerHTML = '<span class="btn-icon">🔍</span><span class="btn-text">Scan</span>';
   }
 }
@@ -1291,7 +1327,7 @@ function formatResult(data) {
 
 
 // Save to history
-function saveToHistory(message, result) {
+function saveToHistory(message, result, explanation = null) {
     // Find the history list in case it's lazy-loaded
     const historySection = document.getElementById('historyMainSection');
     if (!historySection) return; // safety check
@@ -1303,19 +1339,61 @@ function saveToHistory(message, result) {
     const historyItem = document.createElement("div");
     historyItem.className = `history-item ${isPhishing ? 'phishing' : 'safe'}`;
     historyItem.setAttribute('role', 'listitem');
-    const truncatedMessage = message.length > 50 ? message.substring(0, 50) + "..." : message;
+    const truncatedMessage = message.length > 80 ? message.substring(0, 80) + "..." : message;
+    const hasExplanation = explanation && explanation !== '__EXPLAINER_UNAVAILABLE__' && explanation !== '';
+    const uniqueId = 'history-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     historyItem.innerHTML = `
-        <div style="font-weight: 500; margin-bottom: 4px;">
-            ${isPhishing ? "🚨 Phishing" : "✅ Safe"}
+        <div style="display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 8px;">
+            <span style="font-size: 1.2rem;">${isPhishing ? "🚨" : "✅"}</span>
+            <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 0.8rem; color: #cbd5e1; word-break: break-word; line-height: 1.3;">
+                    ${truncatedMessage}
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 0.7rem; color: #64748b;">${timeString}</span>
+                ${hasExplanation ? `<button class="history-expand-btn" data-history-id="${uniqueId}" style="padding: 4px 8px; border: 1px solid #475569; background: transparent; color: #64748b; cursor: pointer; font-size: 0.75rem; border-radius: 4px; transition: all 0.2s ease;" title="View explanation">Show explanation</button>` : ''}
+            </div>
         </div>
-        <div style="font-size: 0.85rem; color: #cbd5e1;">
-            ${truncatedMessage}
-        </div>
-        <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">
-            ${new Date().toLocaleTimeString()}
-        </div>
+        ${hasExplanation ? `<div id="${uniqueId}" class="history-explanation hidden" style="margin-top: 10px; padding: 10px; background: rgba(51, 65, 85, 0.5); border-radius: 4px; font-size: 0.8rem; color: #cbd5e1; display: none; border-left: 3px solid #6366f1;"></div>` : ''}
     `;
+
+    // Store explanation in data attribute if it exists
+    if (hasExplanation) {
+        const expDiv = historyItem.querySelector(`#${uniqueId}`);
+        if (expDiv) {
+            expDiv.dataset.explanation = explanation;
+        }
+    }
+
+    // Add expand button functionality
+    const expandBtn = historyItem.querySelector('.history-expand-btn');
+    if (expandBtn) {
+        expandBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const historyId = this.getAttribute('data-history-id');
+            const expDiv = historyItem.querySelector(`#${historyId}`);
+            if (expDiv) {
+                const isHidden = expDiv.style.display === 'none';
+                expDiv.style.display = isHidden ? 'block' : 'none';
+                
+                // Render explanation if not already rendered
+                if (isHidden && !expDiv.innerHTML) {
+                    const explanationText = expDiv.dataset.explanation;
+                    if (window.marked && explanationText) {
+                        expDiv.innerHTML = marked.parse(explanationText);
+                    } else if (explanationText) {
+                        expDiv.innerHTML = explanationText;
+                    }
+                }
+                
+                this.textContent = isHidden ? 'Hide explanation' : 'Show explanation';
+                this.style.borderColor = isHidden ? '#6366f1' : '#475569';
+            }
+        });
+    }
 
     // Remove empty history message if it exists
     const emptyHistory = historyList.querySelector('.empty-history');
@@ -1945,7 +2023,7 @@ function setupImagePicker() {
       try {
         // Show progress bar
         animateProgressBar();
-        const response = await fetch(`${apiUrl}/analyze`, {
+        const response = await fetch(`${apiUrl}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: ocrText })
@@ -1953,17 +2031,20 @@ function setupImagePicker() {
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         displayScanResult(data.result, data.confidence);
-        saveToHistory(ocrText, data.result);
-        updateStats(data.result);
-        // Get explanation asynchronously
+        
+        // Get explanation asynchronously and save with history
+        let explanation = null;
         try {
-          const explanation = await callExplainerModel(ocrText, data.result);
+          explanation = await callExplainerModel(ocrText, data.result);
           if (explanation) {
             displayScanResult(data.result, data.confidence, explanation);
           }
         } catch (error) {
           // Explanation service unavailable
         }
+        
+        saveToHistory(ocrText, data.result, explanation);
+        updateStats(data.result);
       } catch (error) {
         removeTypingIndicator();
         hideProgressBar();
@@ -2176,17 +2257,262 @@ function openCamera() {
   }
 }
 
+// Reset model menu to first level
+function resetModelMenu() {
+  const aiModelsEntry = document.getElementById('aiModelsEntry');
+  const imageEntry = document.getElementById('imageEntry');
+  const modelSubDropdown = document.getElementById('modelSubDropdown');
+  const imageSubDropdown = document.getElementById('imageSubDropdown');
+  const backButton = document.getElementById('backButton');
+  const imageBackButton = document.getElementById('imageBackButton');
+  
+  if (backButton) {
+    backButton.classList.add('hidden');
+    backButton.setAttribute('hidden', 'hidden');
+  }
+  if (imageBackButton) {
+    imageBackButton.classList.add('hidden');
+    imageBackButton.setAttribute('hidden', 'hidden');
+  }
+  if (aiModelsEntry) {
+    aiModelsEntry.classList.remove('hidden');
+    aiModelsEntry.removeAttribute('hidden');
+    aiModelsEntry.setAttribute('aria-expanded', 'false');
+  }
+  if (imageEntry) {
+    imageEntry.classList.remove('hidden');
+    imageEntry.removeAttribute('hidden');
+    imageEntry.setAttribute('aria-expanded', 'false');
+  }
+  if (modelSubDropdown) {
+    modelSubDropdown.classList.add('hidden');
+    modelSubDropdown.setAttribute('hidden', 'hidden');
+  }
+  if (imageSubDropdown) {
+    imageSubDropdown.classList.add('hidden');
+    imageSubDropdown.setAttribute('hidden', 'hidden');
+  }
+}
+
 // Close dropdown when clicking outside
 document.addEventListener('click', function(event) {
-  const dropdown = document.getElementById('imageOptionsDropdown');
-  const imageBtn = document.getElementById('imageOptionsBtn');
+  // Also close model dropdown when clicking outside
+  const modelDropdown = document.getElementById('modelDropdown');
+  const modelBtn = document.getElementById('modelPickerBtn');
   
-  if (dropdown && !dropdown.classList.contains('hidden') && 
-      !imageBtn.contains(event.target) && 
-      !dropdown.contains(event.target)) {
-    dropdown.classList.add('hidden');
+  if (modelDropdown && !modelDropdown.classList.contains('hidden') && 
+      !modelBtn.contains(event.target) && 
+      !modelDropdown.contains(event.target)) {
+    modelDropdown.classList.add('hidden');
+    modelBtn.setAttribute('aria-expanded', 'false');
+    // Reset menu to first level when closing
+    resetModelMenu();
   }
 });
+
+// === AI Model Picker Setup ===
+function setupModelPicker() {
+  const modelBtn = document.getElementById('modelPickerBtn');
+  const modelDropdown = document.getElementById('modelDropdown');
+  // Only select actual model options (those with a data-model-id). This avoids
+  // treating the top-level "AI Models" group entry as a selectable model.
+  const modelOptions = document.querySelectorAll('.model-option[data-model-id]');
+  const aiModelsEntry = document.getElementById('aiModelsEntry');
+  const imageEntry = document.getElementById('imageEntry');
+  const modelSubDropdown = document.getElementById('modelSubDropdown');
+  const imageSubDropdown = document.getElementById('imageSubDropdown');
+  const backButton = document.getElementById('backButton');
+  const imageBackButton = document.getElementById('imageBackButton');
+  const imageActions = document.querySelectorAll('.image-action');
+  
+  if (!modelBtn || !modelDropdown) return;
+  
+  // Toggle dropdown
+  modelBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isHidden = modelDropdown.classList.contains('hidden');
+    modelDropdown.classList.toggle('hidden');
+    modelBtn.setAttribute('aria-expanded', !isHidden);
+    // Reset to first level when closing
+    if (!isHidden) {
+      resetModelMenu();
+    }
+  });
+
+  // Toggle nested AI Models submenu when the top-level entry is clicked
+  if (aiModelsEntry && modelSubDropdown) {
+    aiModelsEntry.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Hide both "AI Models" and "Image" entries and show the back button
+      aiModelsEntry.classList.add('hidden');
+      aiModelsEntry.setAttribute('hidden', 'hidden');
+      imageEntry.classList.add('hidden');
+      imageEntry.setAttribute('hidden', 'hidden');
+      if (backButton) {
+        backButton.classList.remove('hidden');
+        backButton.removeAttribute('hidden');
+      }
+      modelSubDropdown.classList.remove('hidden');
+      modelSubDropdown.removeAttribute('hidden');
+      aiModelsEntry.setAttribute('aria-expanded', 'true');
+    });
+  }
+
+  // Back button: return to showing both AI Models and Image entries
+  if (backButton && modelSubDropdown) {
+    backButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Hide back button and show both AI Models and Image entries
+      backButton.classList.add('hidden');
+      backButton.setAttribute('hidden', 'hidden');
+      aiModelsEntry.classList.remove('hidden');
+      aiModelsEntry.removeAttribute('hidden');
+      imageEntry.classList.remove('hidden');
+      imageEntry.removeAttribute('hidden');
+      modelSubDropdown.classList.add('hidden');
+      modelSubDropdown.setAttribute('hidden', 'hidden');
+      aiModelsEntry.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  // Handle Image entry click: show image submenu
+  if (imageEntry && imageSubDropdown) {
+    imageEntry.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Hide both main entries and show the back button
+      aiModelsEntry.classList.add('hidden');
+      aiModelsEntry.setAttribute('hidden', 'hidden');
+      imageEntry.classList.add('hidden');
+      imageEntry.setAttribute('hidden', 'hidden');
+      if (imageBackButton) {
+        imageBackButton.classList.remove('hidden');
+        imageBackButton.removeAttribute('hidden');
+      }
+      imageSubDropdown.classList.remove('hidden');
+      imageSubDropdown.removeAttribute('hidden');
+      imageEntry.setAttribute('aria-expanded', 'true');
+    });
+  }
+
+  // Image back button: return to showing both AI Models and Image entries
+  if (imageBackButton && imageSubDropdown) {
+    imageBackButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Hide back button and show both entries
+      imageBackButton.classList.add('hidden');
+      imageBackButton.setAttribute('hidden', 'hidden');
+      aiModelsEntry.classList.remove('hidden');
+      aiModelsEntry.removeAttribute('hidden');
+      imageEntry.classList.remove('hidden');
+      imageEntry.removeAttribute('hidden');
+      imageSubDropdown.classList.add('hidden');
+      imageSubDropdown.setAttribute('hidden', 'hidden');
+      imageEntry.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  // Handle image action clicks (camera or upload)
+  imageActions.forEach(action => {
+    action.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const actionType = action.getAttribute('data-action');
+      if (actionType === 'camera') {
+        openCamera();
+      } else if (actionType === 'upload') {
+        selectImage();
+      }
+      // Reset menu and close dropdown
+      resetModelMenu();
+      modelDropdown.classList.add('hidden');
+      modelBtn.setAttribute('aria-expanded', 'false');
+    });
+  });
+  
+  // Handle model selection
+  modelOptions.forEach(option => {
+    option.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const modelId = option.getAttribute('data-model-id');
+      selectModel(modelId);
+      
+      // Update UI
+      modelOptions.forEach(opt => {
+        opt.setAttribute('aria-selected', 'false');
+      });
+      option.setAttribute('aria-selected', 'true');
+      
+      // Reset menu to first level
+      resetModelMenu();
+      
+      // Close dropdown
+      modelDropdown.classList.add('hidden');
+      modelBtn.setAttribute('aria-expanded', 'false');
+    });
+    
+    option.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        option.click();
+      }
+    });
+  });
+  
+  // Load saved model preference
+  const savedModel = localStorage.getItem('selectedAIModel') || 'default';
+  selectModel(savedModel, false); // false = don't show notification on initial load
+  modelInitialized = true; // Mark as initialized for future switches
+}
+
+// Select and configure the AI model
+function selectModel(modelId, showNotif = true) {
+  if (!modelConfig[modelId]) return;
+  
+  selectedModel = modelId;
+  const config = modelConfig[modelId];
+  
+  // Update API URLs
+  apiUrl = config.apiUrl;
+  explainerUrl = config.explainerUrl;
+  
+  // Save preference
+  localStorage.setItem('selectedAIModel', modelId);
+  
+  // Show notification only if user explicitly switched (not on initial load)
+  if (showNotif && modelInitialized) {
+    showModelNotification(config.name);
+  }
+  
+  // Update button text
+  const modelBtn = document.getElementById('modelPickerBtn');
+  if (modelBtn) {
+    const labelSpan = modelBtn.querySelector('.model-label');
+    if (labelSpan) {
+      labelSpan.textContent = config.name.split(' ')[0]; // Show first word
+    }
+  }
+  
+  console.log(`AI Model switched to: ${config.name}`);
+}
+
+// Show model switch notification
+function showModelNotification(modelName) {
+  const notification = document.getElementById('modelNotification');
+  if (!notification) return;
+  
+  notification.textContent = `✨ Switched to ${modelName}`;
+  notification.classList.add('show');
+  
+  // Auto-hide after 3 seconds
+  setTimeout(() => {
+    notification.classList.remove('show');
+  }, 3000);
+}
+
+// Update model picker display on theme change
+function updateModelPickerTheme() {
+  // CSS handles this, but we could add custom logic here if needed
+}
+
 /* splash screen */
 window.addEventListener("load", () => {
   const splash = document.getElementById("splashScreen");
