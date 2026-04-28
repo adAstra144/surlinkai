@@ -14,8 +14,8 @@ const statusText = document.getElementById("statusText");
 let totalScans = 0;
 let phishingScans = 0;
 let safeScans = 0;
-let apiUrl = "https://adastra144-anti-phishing-scanner-0.hf.space";
-let explainerUrl = "https://adastra144-explainer.hf.space/explain";
+let apiUrl = "https://surlink-anti-phishing-scanner-0.hf.space";
+let explainerUrl = "https://surlink-explainer.hf.space/explain";
 let isScanning = false;
 
 // AI Model Configuration
@@ -25,19 +25,19 @@ const modelConfig = {
   default: {
     id: "default",
     name: "HuggingFace",
-    apiUrl: "https://adastra144-anti-phishing-scanner-0.hf.space/analyze",
+    apiUrl: "https://surlink-anti-phishing-scanner-0.hf.space/analyze",
     description: "Lightning-fast scanning"
   },
   advanced: {
     id: "advanced",
     name: "OpenRouter v1",
-    apiUrl: "https://adastra144-anti-phishing-scanner-0.hf.space/analyze/or1",
+    apiUrl: "https://surlink-anti-phishing-scanner-0.hf.space/analyze/or1",
     description: "Enhanced accuracy & deep analysis"
   },
   fast: {
     id: "fast",
     name: "OpenRouter v2",
-    apiUrl: "https://adastra144-anti-phishing-scanner-0.hf.space/analyze/or2",
+    apiUrl: "https://surlink-anti-phishing-scanner-0.hf.space/analyze/or2",
     description: "Maximum accuracy detection"
   }
 };
@@ -1020,7 +1020,7 @@ async function checkApiStatus() {
   // Check Detection System
   let detectionOnline = false;
   try {
-    const detectionResp = await fetch('https://adastra144-anti-phishing-scanner-0.hf.space/health', {
+    const detectionResp = await fetch('https://surlink-anti-phishing-scanner-0.hf.space/health', {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       signal: AbortSignal.timeout(5000)
@@ -1041,7 +1041,7 @@ async function checkApiStatus() {
   // Check Explainer
   let explainerOnline = false;
   try {
-    const explainerResp = await fetch('https://adastra144-explainer.hf.space/health', {
+    const explainerResp = await fetch('https://surlink-explainer.hf.space/health', {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       signal: AbortSignal.timeout(5000)
@@ -1784,7 +1784,7 @@ function updateExplainerUrl(url) {
 async function callExplainerModel(message, label) {
     // Call local FastAPI backend for explanation
     try {
-        const response = await fetch("https://adastra144-Explainer.hf.space/explain", {
+        const response = await fetch("https://surlink-Explainer.hf.space/explain", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ message, label })
